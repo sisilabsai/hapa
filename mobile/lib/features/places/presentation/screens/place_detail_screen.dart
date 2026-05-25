@@ -14,7 +14,7 @@ import '../../../../shared/models/post.dart';
 
 final _placeProvider = FutureProvider.family<Business, String>((ref, id) {
   return ref.watch(apiClientProvider).get(
-    '/v1/businesses/$id',
+    '/v1/places/$id',
     fromJson: (d) => Business.fromJson(d as Map<String, dynamic>),
   );
 });

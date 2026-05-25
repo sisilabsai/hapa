@@ -50,13 +50,18 @@ class PostBusiness {
     this.address,
   });
 
+  static String? _str(dynamic v) {
+    final s = v as String?;
+    return (s == null || s.isEmpty) ? null : s;
+  }
+
   factory PostBusiness.fromJson(Map<String, dynamic> j) => PostBusiness(
         id: j['id'] as String? ?? '',
         name: j['name'] as String? ?? '',
-        category: j['category'] as String?,
-        coverUrl: j['cover_url'] as String?,
+        category: _str(j['category']),
+        coverUrl: _str(j['cover_url']),
         ratingAvg: (j['rating_avg'] as num?)?.toDouble(),
-        address: j['address'] as String?,
+        address: _str(j['address']),
       );
 }
 
