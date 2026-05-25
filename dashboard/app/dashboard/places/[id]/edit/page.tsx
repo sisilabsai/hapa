@@ -10,7 +10,7 @@ import {
   MapPin, ChevronLeft, Star, Check, Plus, Trash2, Edit2,
   Instagram, Facebook, Globe, Youtube, Twitter, ShieldCheck,
   AlertTriangle, Image, UtensilsCrossed, MessageSquare, Settings,
-  Clock, BarChart2,
+  Clock, BarChart2, Upload, X,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -556,79 +556,221 @@ function HoursTab({ biz, id, queryClient, showToast }: TabProps) {
   );
 }
 
+// ── Image Uploader ─────────────────────────────────────────────────────────────
+
+function ImageUploader({
+  value,
+  onChange,
+  onRemove,
+  className = "w-full aspect-square",
+  hint,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+  onRemove: () => void;
+  className?: string;
+  hint?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState(value);
+  const [drag, setDrag] = useState(false);
+
+  useEffect(() => { setPreview(value); }, [value]);
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const blobUrl = URL.createObjectURL(file);
+    setPreview(blobUrl);
+    setUploading(true);
+    try {
+      const { url } = await api.upload(file);
+      onChange(url);
+      setPreview(url);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      setPreview(value);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDrag(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  return (
+    <div>
+      <div
+        className={`relative overflow-hidden cursor-pointer transition-colors border-2 ${
+          drag ? "border-[#C47B2B] bg-[#C47B2B]/5" : preview ? "border-stone-200" : "border-dashed border-stone-200 hover:border-[#C47B2B]/40 hover:bg-stone-50"
+        } ${className}`}
+        onClick={() => !uploading && inputRef.current?.click()}
+        onDragOver={e => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={handleDrop}
+      >
+        {preview ? (
+          <>
+            <img src={preview} alt="" className="w-full h-full object-cover" />
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 pointer-events-none">
+              <Upload size={18} className="text-white" />
+              <span className="font-mono text-[10px] uppercase tracking-widest text-white">Change</span>
+            </div>
+            {/* Remove button */}
+            <button
+              onClick={e => { e.stopPropagation(); onRemove(); setPreview(""); }}
+              className="absolute top-2 right-2 w-6 h-6 bg-white/90 hover:bg-white flex items-center justify-center transition-colors shadow-sm z-10"
+            >
+              <X size={12} className="text-stone-700" />
+            </button>
+          </>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-2">
+            <Upload size={20} className={drag ? "text-[#C47B2B]" : "text-stone-300"} />
+            <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 text-center">
+              {drag ? "Drop photo" : "Click or drag"}
+            </span>
+          </div>
+        )}
+
+        {/* Uploading overlay */}
+        {uploading && (
+          <div className="absolute inset-0 bg-white/85 flex flex-col items-center justify-center gap-2">
+            <div className="w-5 h-5 border-2 border-[#C47B2B] border-t-transparent rounded-full animate-spin" />
+            <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400">Uploading…</span>
+          </div>
+        )}
+      </div>
+
+      {hint && <p className="font-mono text-[10px] text-stone-400 mt-1.5 leading-relaxed">{hint}</p>}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+      />
+    </div>
+  );
+}
+
 // ── Tab: Gallery ──────────────────────────────────────────────────────────────
 
 function GalleryTab({ biz, id, queryClient, showToast }: TabProps) {
   const [coverUrl, setCoverUrl] = useState(biz.cover_url ?? "");
-  const [gallery, setGallery] = useState<string[]>(biz.gallery_urls ?? []);
+  const [gallery, setGallery] = useState<string[]>(() => {
+    const existing = biz.gallery_urls ?? [];
+    return existing.length > 0 ? existing : ["", "", ""];
+  });
 
   useEffect(() => {
     setCoverUrl(biz.cover_url ?? "");
-    setGallery(biz.gallery_urls ?? []);
+    const existing = biz.gallery_urls ?? [];
+    setGallery(existing.length > 0 ? existing : ["", "", ""]);
   }, [biz]);
 
-  const addPhoto = () => { if (gallery.length < 10) setGallery(g => [...g, ""]); };
-  const removePhoto = (i: number) => setGallery(g => g.filter((_, j) => j !== i));
-  const updatePhoto = (i: number, val: string) => setGallery(g => g.map((v, j) => j === i ? val : v));
+  const addSlot = () => { if (gallery.length < 10) setGallery(g => [...g, ""]); };
+  const removeSlot = (i: number) => setGallery(g => g.filter((_, j) => j !== i));
+  const updateSlot = (i: number, url: string) => setGallery(g => g.map((v, j) => j === i ? url : v));
 
   const mutation = useMutation({
-    mutationFn: () => endpoints.business.update(id, { cover_url: coverUrl, gallery_urls: gallery.filter(Boolean) }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["business-owner", id] }); showToast("Saved successfully"); },
-    onError: () => showToast("Failed to save. Please try again.", "error"),
+    mutationFn: () => endpoints.business.update(id, {
+      cover_url: coverUrl || undefined,
+      gallery_urls: gallery.filter(Boolean),
+    }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["business-owner", id] }); showToast("Photos saved"); },
+    onError: () => showToast("Failed to save photos", "error"),
   });
 
+  const filledCount = gallery.filter(Boolean).length;
+
   return (
-    <div className="space-y-6 bg-white border border-stone-200 p-6">
-      <h2 className="font-fraunces text-lg font-semibold border-b border-stone-100 pb-3">Gallery</h2>
+    <div className="space-y-8 bg-white border border-stone-200 p-6">
+      <h2 className="font-fraunces text-lg font-semibold border-b border-stone-100 pb-3">Photos & Media</h2>
 
-      <Field label="Cover Photo URL">
-        <input type="url" value={coverUrl} onChange={e => setCoverUrl(e.target.value)} className={INPUT} placeholder="https://example.com/cover.jpg" />
-        {coverUrl && (
-          <div className="mt-3 w-32 h-20 border border-stone-200 overflow-hidden">
-            <img src={coverUrl} alt="Cover preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = "none")} />
+      {/* Logo / Cover */}
+      <div>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-stone-400 mb-3">Business Logo & Cover Photo</p>
+        <div className="grid grid-cols-2 gap-6 items-start">
+          <ImageUploader
+            value={coverUrl}
+            onChange={setCoverUrl}
+            onRemove={() => setCoverUrl("")}
+            className="w-full h-44"
+            hint="Wide cover — shown as your hero image and in-feed avatar. JPG, PNG or WebP."
+          />
+          {/* Live preview as avatar */}
+          <div className="space-y-3">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-stone-400">Preview</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-stone-100 shrink-0 border border-stone-200">
+                {coverUrl
+                  ? <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center"><Image size={14} className="text-stone-300" /></div>
+                }
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-stone-800">{biz.name}</p>
+                <p className="font-mono text-[10px] text-stone-400">Feed post avatar</p>
+              </div>
+            </div>
+            <div className="w-full h-20 overflow-hidden bg-stone-100 border border-stone-200">
+              {coverUrl
+                ? <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+                : <div className="w-full h-full flex items-center justify-center"><Image size={20} className="text-stone-300" /></div>
+              }
+            </div>
+            <p className="font-mono text-[10px] text-stone-400">Business profile hero</p>
           </div>
-        )}
-      </Field>
+        </div>
+      </div>
 
-      <Field label={`Gallery Photos (${gallery.length}/10)`}>
-        <div className="space-y-3">
+      {/* Gallery grid */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-stone-400">Gallery Photos</p>
+            <p className="font-mono text-[10px] text-stone-300 mt-0.5">{filledCount} uploaded · {gallery.length - filledCount} empty slots</p>
+          </div>
+          {gallery.length < 10 && (
+            <button
+              onClick={addSlot}
+              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-[#C47B2B] hover:text-[#E8A84A] transition-colors border border-[#C47B2B]/30 px-3 py-1.5 hover:bg-[#C47B2B]/5"
+            >
+              <Plus size={11} /> Add Slot
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
           {gallery.map((url, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                type="url"
+            <div key={i} className="relative">
+              <ImageUploader
                 value={url}
-                onChange={e => updatePhoto(i, e.target.value)}
-                className={`${INPUT} flex-1`}
-                placeholder="https://example.com/photo.jpg"
+                onChange={u => updateSlot(i, u)}
+                onRemove={() => removeSlot(i)}
+                className="w-full aspect-square"
               />
-              {url && (
-                <div className="w-10 h-10 border border-stone-200 overflow-hidden shrink-0">
-                  <img src={url} alt="" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = "none")} />
-                </div>
+              {gallery.length > 1 && (
+                <button
+                  onClick={() => removeSlot(i)}
+                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 font-mono text-[8px] uppercase tracking-widest text-stone-400 hover:text-red-400 transition-colors whitespace-nowrap"
+                >
+                  Remove slot
+                </button>
               )}
-              <button onClick={() => removePhoto(i)} className="p-2 text-stone-400 hover:text-red-500 transition-colors shrink-0">
-                <Trash2 size={14} />
-              </button>
             </div>
           ))}
         </div>
 
-        {gallery.length > 0 && gallery.some(Boolean) && (
-          <div className="grid grid-cols-4 gap-2 mt-4">
-            {gallery.filter(Boolean).map((url, i) => (
-              <div key={i} className="aspect-square border border-stone-200 overflow-hidden">
-                <img src={url} alt="" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = "none")} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {gallery.length < 10 && (
-          <button onClick={addPhoto} className="mt-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[#C47B2B] border border-[#C47B2B]/30 px-4 py-2 hover:bg-[#C47B2B]/5 transition-colors">
-            <Plus size={12} /> Add Photo
-          </button>
-        )}
-      </Field>
+        <p className="font-mono text-[10px] text-stone-400 mt-5">Up to 10 photos · Shown in your business profile gallery on the Hapa app</p>
+      </div>
 
       <SaveButton loading={mutation.isPending} onClick={() => mutation.mutate()} />
     </div>

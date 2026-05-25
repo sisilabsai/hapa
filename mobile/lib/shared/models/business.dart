@@ -11,6 +11,8 @@ class Business {
   final String? whatsapp;
   final String? website;
   final String? logoUrl;
+  final String? coverUrl;
+  final List<String> galleryUrls;
   final double? avgRating;
   final int reviewCount;
   final String tier;
@@ -32,6 +34,8 @@ class Business {
     this.whatsapp,
     this.website,
     this.logoUrl,
+    this.coverUrl,
+    this.galleryUrls = const [],
     this.avgRating,
     this.reviewCount = 0,
     this.tier = 'free',
@@ -40,6 +44,21 @@ class Business {
     this.isVerified = false,
     this.distanceMeters,
   });
+
+  static String? _str(dynamic v) {
+    final s = v as String?;
+    return (s == null || s.isEmpty) ? null : s;
+  }
+
+  // Primary photo: logo_url > cover_url (so either field from the API works)
+  String? get primaryPhotoUrl => _str(logoUrl) ?? _str(coverUrl);
+
+  // All photos for the gallery: [primary] + gallery_urls
+  List<String> get allPhotos {
+    final primary = primaryPhotoUrl;
+    final extras = galleryUrls.where((u) => u.isNotEmpty).toList();
+    return [if (primary != null) primary, ...extras];
+  }
 
   factory Business.fromJson(Map<String, dynamic> json) => Business(
         id: json['id'] as String,
@@ -53,7 +72,9 @@ class Business {
         phone: json['phone'] as String?,
         whatsapp: json['whatsapp'] as String?,
         website: json['website'] as String?,
-        logoUrl: json['logo_url'] as String?,
+        logoUrl: _str(json['logo_url']),
+        coverUrl: _str(json['cover_url']),
+        galleryUrls: (json['gallery_urls'] as List?)?.cast<String>() ?? [],
         avgRating: (json['avg_rating'] as num?)?.toDouble(),
         reviewCount: json['review_count'] as int? ?? 0,
         tier: json['tier'] as String? ?? 'free',

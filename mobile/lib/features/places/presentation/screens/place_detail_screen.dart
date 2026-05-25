@@ -92,12 +92,11 @@ class _PlaceDetailState extends ConsumerState<_PlaceDetail> {
   final _photoCtrl = PageController();
   int _photoIndex = 0;
 
-  // Simulated gallery: logoUrl + category-colored placeholder pages
+  // Real gallery: cover + gallery_urls, with at least 1 slot for placeholder
   List<String?> get _photos {
-    final base = widget.business.logoUrl != null ? [widget.business.logoUrl] : <String?>[];
-    // Fill remaining slots with null (shows gradient placeholder)
-    while (base.length < 3) base.add(null);
-    return base;
+    final real = widget.business.allPhotos;
+    if (real.isEmpty) return [null]; // single placeholder
+    return real.cast<String?>();
   }
 
   @override
@@ -156,10 +155,11 @@ class _PlaceDetailState extends ConsumerState<_PlaceDetail> {
                   itemBuilder: (_, i) {
                     final url = _photos[i];
                     if (url != null) {
-                      return Image.network(
-                        url,
+                      return CachedNetworkImage(
+                        imageUrl: url,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _GalleryPlaceholder(biz: biz, index: i),
+                        placeholder: (_, __) => _GalleryPlaceholder(biz: biz, index: i),
+                        errorWidget: (_, __, ___) => _GalleryPlaceholder(biz: biz, index: i),
                       );
                     }
                     return _GalleryPlaceholder(biz: biz, index: i);
