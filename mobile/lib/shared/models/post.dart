@@ -157,8 +157,13 @@ class Post {
         isFlash: isFlash, flashExpiresAt: flashExpiresAt,
       );
 
-  String get displayName => userDisplayName ?? author?.displayName ?? 'Hapa User';
-  String? get displayAvatar => userAvatarUrl ?? author?.avatarUrl;
+  bool get isBusinessPost => businessId != null && businessId!.isNotEmpty;
+  String get displayName => (isBusinessPost && businessName != null && businessName!.isNotEmpty)
+      ? businessName!
+      : (userDisplayName ?? author?.displayName ?? 'Hapa User');
+  String? get displayAvatar => isBusinessPost
+      ? (business?.coverUrl ?? userAvatarUrl ?? author?.avatarUrl)
+      : (userAvatarUrl ?? author?.avatarUrl);
 
   static String? _str(dynamic v) {
     final s = v as String?;

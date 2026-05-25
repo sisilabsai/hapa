@@ -195,7 +195,13 @@ class _PostCardState extends ConsumerState<PostCard> {
                 // Header: author + meta
                 _AuthorRow(
                   post: _post,
-                  onTap: () => context.push('/creators/${_post.userId}'),
+                  onTap: () {
+                    if (_post.isBusinessPost) {
+                      context.push('/places/${_post.businessId}');
+                    } else {
+                      context.push('/creators/${_post.userId}');
+                    }
+                  },
                 ),
 
                 // Content
@@ -211,25 +217,38 @@ class _PostCardState extends ConsumerState<PostCard> {
                     ),
                   ),
 
-                // Business attribution
-                if (_post.businessName != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.storefront_rounded, size: 11, color: HapaColors.ochre),
-                        const SizedBox(width: 4),
-                        Text(
-                          _post.businessName!,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: HapaColors.ochre,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.2,
-                          ),
+                // Business profile tap chip
+                if (_post.isBusinessPost)
+                  GestureDetector(
+                    onTap: () => context.push('/places/${_post.businessId}'),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: HapaColors.ochre.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(3),
+                          border: Border.all(color: HapaColors.ochre.withValues(alpha: 0.25)),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.storefront_rounded, size: 10, color: HapaColors.ochre),
+                            const SizedBox(width: 4),
+                            Text(
+                              'View ${_post.businessName ?? 'business'} profile',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: HapaColors.ochre,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            const SizedBox(width: 3),
+                            const Icon(Icons.arrow_forward_ios, size: 9, color: HapaColors.ochre),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
 
@@ -462,17 +481,33 @@ class _AuthorRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    post.displayName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      color: HapaColors.deep,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          post.displayName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: HapaColors.deep,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (post.isBusinessPost) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.storefront_rounded, size: 11, color: HapaColors.ochre),
+                      ],
+                    ],
                   ),
                   Row(
                     children: [
-                      if (post.neighbourhood != null) ...[
+                      if (post.isBusinessPost) ...[
+                        const Icon(Icons.storefront_rounded, size: 9, color: HapaColors.ochre),
+                        const SizedBox(width: 2),
+                        Text('Business', style: TextStyle(fontSize: 10, color: HapaColors.ochre, fontWeight: FontWeight.w600)),
+                        Text(' · ', style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
+                      ] else if (post.neighbourhood != null) ...[
                         const Icon(Icons.location_on, size: 9, color: HapaColors.ochre),
                         const SizedBox(width: 2),
                         Text(

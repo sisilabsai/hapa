@@ -257,72 +257,101 @@ class _AuthorSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final author = post.author;
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Row(
-        children: [
-          PostAvatar(name: post.displayName, url: post.displayAvatar, radius: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      post.displayName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: HapaColors.deep,
-                      ),
-                    ),
-                    if (author?.isVerified == true) ...[
-                      const SizedBox(width: 4),
-                      const Icon(Icons.verified, size: 14, color: HapaColors.ochre),
-                    ],
-                  ],
-                ),
-                if (author?.bio != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      author!.bio!,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.3),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    if (post.city != null)
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on, size: 10, color: HapaColors.ochre),
-                          const SizedBox(width: 2),
-                          Text(
-                            post.neighbourhood ?? post.city!,
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+    return GestureDetector(
+      onTap: () {
+        if (post.isBusinessPost) {
+          context.push('/places/${post.businessId}');
+        } else if (author != null) {
+          context.push('/creators/${author.id}');
+        }
+      },
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+        child: Row(
+          children: [
+            PostAvatar(name: post.displayName, url: post.displayAvatar, radius: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          post.displayName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: HapaColors.deep,
                           ),
-                          Text(' · ', style: TextStyle(fontSize: 11, color: Colors.grey.shade300)),
-                        ],
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    Text(
-                      _timeAgo(post.createdAt),
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                      if (post.isBusinessPost) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.storefront_rounded, size: 14, color: HapaColors.ochre),
+                      ] else if (author?.isVerified == true) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.verified, size: 14, color: HapaColors.ochre),
+                      ],
+                    ],
+                  ),
+                  if (post.isBusinessPost && post.business?.category != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        post.business!.category!,
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.3),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )
+                  else if (!post.isBusinessPost && author?.bio != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        author!.bio!,
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.3),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      if (post.isBusinessPost) ...[
+                        const Icon(Icons.storefront_rounded, size: 10, color: HapaColors.ochre),
+                        const SizedBox(width: 2),
+                        Text('Business', style: TextStyle(fontSize: 11, color: HapaColors.ochre, fontWeight: FontWeight.w600)),
+                        Text(' · ', style: TextStyle(fontSize: 11, color: Colors.grey.shade300)),
+                      ] else if (post.city != null) ...[
+                        const Icon(Icons.location_on, size: 10, color: HapaColors.ochre),
+                        const SizedBox(width: 2),
+                        Text(
+                          post.neighbourhood ?? post.city!,
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                        ),
+                        Text(' · ', style: TextStyle(fontSize: 11, color: Colors.grey.shade300)),
+                      ],
+                      Text(
+                        _timeAgo(post.createdAt),
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (author?.trustScore != null && author!.trustScore > 0)
-            _TrustBadge(score: author.trustScore),
-        ],
-      ),
-    ).animate().fadeIn(duration: 250.ms);
+            if (post.isBusinessPost)
+              const Icon(Icons.arrow_forward_ios, size: 14, color: HapaColors.ochre)
+            else if (author?.trustScore != null && author!.trustScore > 0)
+              _TrustBadge(score: author.trustScore),
+          ],
+        ),
+      ).animate().fadeIn(duration: 250.ms),
+    );
   }
 
   String _timeAgo(DateTime dt) {
@@ -527,69 +556,132 @@ class _BusinessCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final biz = post.business!;
-    return Container(
-      color: Colors.white,
-      margin: const EdgeInsets.only(top: 2),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            color: HapaColors.ochre.withOpacity(0.08),
-            child: const Icon(Icons.storefront_rounded, color: HapaColors.ochre, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  biz.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: HapaColors.deep,
-                  ),
-                ),
-                if (biz.category != null)
-                  Text(
-                    biz.category!,
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                  ),
-                if (biz.address != null)
-                  Text(
-                    biz.address!,
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-          if (biz.ratingAvg != null && biz.ratingAvg! > 0)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.star, size: 13, color: HapaColors.ochre),
-                    const SizedBox(width: 2),
-                    Text(
-                      biz.ratingAvg!.toStringAsFixed(1),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: HapaColors.deep,
+    return GestureDetector(
+      onTap: () => context.push('/places/${biz.id}'),
+      child: Container(
+        color: Colors.white,
+        margin: const EdgeInsets.only(top: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: Row(
+                children: [
+                  // Business logo — cover photo or fallback icon
+                  if (biz.coverUrl != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: CachedNetworkImage(
+                        imageUrl: biz.coverUrl!,
+                        width: 48, height: 48,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => _BizIcon(),
                       ),
+                    )
+                  else
+                    _BizIcon(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          biz.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: HapaColors.deep,
+                          ),
+                        ),
+                        if (biz.category != null)
+                          Text(
+                            biz.category!,
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                          ),
+                        if (biz.address != null)
+                          Text(
+                            biz.address!,
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (biz.ratingAvg != null && biz.ratingAvg! > 0) ...[
+                        Row(
+                          children: [
+                            const Icon(Icons.star, size: 13, color: HapaColors.ochre),
+                            const SizedBox(width: 2),
+                            Text(
+                              biz.ratingAvg!.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: HapaColors.deep,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      const Icon(Icons.arrow_forward_ios, size: 12, color: HapaColors.ochre),
+                    ],
+                  ),
+                ],
+              ),
             ),
-        ],
+            // View full profile CTA strip
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: HapaColors.ochre.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: HapaColors.ochre.withValues(alpha: 0.2)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.storefront_rounded, size: 13, color: HapaColors.ochre),
+                  SizedBox(width: 6),
+                  Text(
+                    'View full business profile',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: HapaColors.ochre,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios, size: 10, color: HapaColors.ochre),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ).animate().fadeIn(duration: 300.ms, delay: 120.ms),
+    );
+  }
+}
+
+class _BizIcon extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: HapaColors.ochre.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(4),
       ),
-    ).animate().fadeIn(duration: 300.ms, delay: 120.ms);
+      child: const Icon(Icons.storefront_rounded, color: HapaColors.ochre, size: 24),
+    );
   }
 }
 
