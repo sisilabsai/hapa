@@ -201,10 +201,13 @@ func (s *Service) GetFlashFeed(ctx context.Context, lat, lng, radiusM float64) (
 			p.id, p.user_id, p.content, p.media_urls,
 			ST_Y(p.location::geometry) AS lat, ST_X(p.location::geometry) AS lng,
 			p.city, p.neighbourhood, p.pulse_count, p.expires_at, p.created_at,
+			p.business_id::text,
 			ST_Distance(p.location, ST_Point($2, $1)::geography) AS distance_m,
-			u.display_name, u.avatar_url, u.is_verified
+			u.display_name, u.avatar_url, u.is_verified,
+			b.name AS biz_name, b.category::text AS biz_category, b.cover_url AS biz_cover
 		FROM posts p
 		JOIN users u ON u.id = p.user_id
+		LEFT JOIN businesses b ON b.id = p.business_id
 		WHERE p.post_type = 'flash'
 		  AND p.expires_at > NOW()
 		  AND p.moderation_status = 'approved'
@@ -220,15 +223,30 @@ func (s *Service) GetFlashFeed(ctx context.Context, lat, lng, radiusM float64) (
 	var items []*FeedItem
 	for rows.Next() {
 		item := &FeedItem{Author: &Author{}, PostType: "flash"}
+		var bizID *string
+		var bizName, bizCategory, bizCover *string
 		err := rows.Scan(
 			&item.ID, &item.UserID, &item.Content, &item.MediaURLs,
 			&item.Lat, &item.Lng, &item.City, &item.Neighbourhood,
-			&item.CommentCount, // using comment_count field for pulse_count
-			&item.ExpiresAt, &item.CreatedAt, &item.DistanceM,
+			&item.CommentCount, // pulse_count → CommentCount (existing convention)
+			&item.ExpiresAt, &item.CreatedAt,
+			&bizID, &item.DistanceM,
 			&item.Author.DisplayName, &item.Author.AvatarURL, &item.Author.IsVerified,
+			&bizName, &bizCategory, &bizCover,
 		)
 		if err != nil {
 			continue
+		}
+		item.BusinessID = bizID
+		if bizName != nil {
+			item.BusinessSummary = &BusinessSummary{
+				Name:     *bizName,
+				Category: deref(bizCategory),
+				CoverURL: bizCover,
+			}
+			if bizID != nil {
+				item.BusinessSummary.ID = *bizID
+			}
 		}
 		items = append(items, item)
 	}

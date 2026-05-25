@@ -128,22 +128,24 @@ function BusinessCard({
     <div className="bg-white border border-stone-200 p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4 flex-1 min-w-0">
-          {biz.logo_url ? (
+          {(biz.cover_url || biz.logo_url) ? (
             <img
-              src={biz.logo_url}
-              alt={biz.name}
-              className="w-14 h-14 object-cover rounded shrink-0"
+              src={(biz.cover_url || biz.logo_url)!}
+              alt={biz.name || "Business"}
+              className="w-14 h-14 object-cover shrink-0"
             />
           ) : (
-            <div className="w-14 h-14 bg-[#C47B2B]/10 flex items-center justify-center shrink-0 rounded">
-              <span className="font-fraunces font-black text-[#C47B2B] text-xl">
-                {biz.name[0]}
+            <div className="w-14 h-14 bg-[#C47B2B]/10 flex items-center justify-center shrink-0">
+              <span className="font-fraunces font-black text-[#C47B2B] text-2xl">
+                {(biz.name || "?")[0].toUpperCase()}
               </span>
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-fraunces text-lg font-semibold text-stone-900">{biz.name}</h3>
+              <h3 className="font-fraunces text-lg font-semibold text-stone-900">
+                {biz.name || <span className="text-stone-400 italic font-normal text-base">Unnamed business</span>}
+              </h3>
               <span className={`font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-sm ${tier.color}`}>
                 {tier.label}
               </span>

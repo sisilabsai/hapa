@@ -163,12 +163,22 @@ class Post {
       );
 
   bool get isBusinessPost => businessId != null && businessId!.isNotEmpty;
-  String get displayName => (isBusinessPost && businessName != null && businessName!.isNotEmpty)
-      ? businessName!
-      : (userDisplayName ?? author?.displayName ?? 'Hapa User');
+
+  static String? _nonempty(String? s) => (s != null && s.isNotEmpty) ? s : null;
+
+  String get displayName {
+    if (isBusinessPost) {
+      final bName = _nonempty(businessName) ?? _nonempty(business?.name);
+      if (bName != null) return bName;
+    }
+    return _nonempty(userDisplayName) ??
+        _nonempty(author?.displayName) ??
+        'Hapa User';
+  }
+
   String? get displayAvatar => isBusinessPost
-      ? (business?.coverUrl ?? userAvatarUrl ?? author?.avatarUrl)
-      : (userAvatarUrl ?? author?.avatarUrl);
+      ? (_nonempty(business?.coverUrl) ?? _nonempty(userAvatarUrl) ?? _nonempty(author?.avatarUrl))
+      : (_nonempty(userAvatarUrl) ?? _nonempty(author?.avatarUrl));
 
   static String? _str(dynamic v) {
     final s = v as String?;
