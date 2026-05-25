@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hapa — Feature Specification Document</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&family=Instrument+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F0D0A;
+    --paper: #F7F3EC;
+    --ochre: #C47B2B;
+    --ochre-light: #E8A84A;
+    --rust: #8B3A1F;
+    --sage: #3D6B38;
+    --slate: #2A3240;
+    --sand: #DDD0B3;
+    --muted: #7A6E5F;
+    --rule: rgba(196,123,43,0.15);
+    --rule-dark: rgba(196,123,43,0.25);
+    --card-bg: #FFFCF5;
+    --tag-bg: rgba(196,123,43,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Instrument Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  /* NAVIGATION */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(247,243,236,0.96);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rule-dark);
+    padding: 0 3rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .nav-logo {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: 1.4rem; color: var(--ochre); letter-spacing: -0.03em;
+  }
+  .nav-doc {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+    color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+    border-left: 1px solid var(--rule-dark); padding-left: 1rem;
+  }
+  .nav-toc {
+    display: flex; gap: 0; list-style: none;
+  }
+  .nav-toc a {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+    color: var(--muted); text-decoration: none; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.4rem 0.9rem;
+    border-radius: 2px; transition: all 0.15s;
+  }
+  .nav-toc a:hover { color: var(--ochre); background: var(--tag-bg); }
+
+  /* HERO */
+  .hero {
+    padding: 7rem 3rem 5rem;
+    border-bottom: 1px solid var(--rule-dark);
+    display: grid; grid-template-columns: 1fr 320px; gap: 4rem; align-items: end;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.25em; color: var(--ochre); text-transform: uppercase;
+    margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem;
+  }
+  .hero-eyebrow::before { content: '//'; opacity: 0.5; }
+  .hero-title {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: clamp(3rem, 6vw, 5.5rem); line-height: 0.95;
+    letter-spacing: -0.03em; color: var(--ink); margin-bottom: 1.5rem;
+  }
+  .hero-title em { color: var(--ochre); font-style: italic; }
+  .hero-desc {
+    font-size: 1.05rem; color: var(--muted); line-height: 1.8; max-width: 580px;
+  }
+  .hero-meta {
+    display: flex; flex-direction: column; gap: 1.2rem;
+    padding: 2rem; border: 1px solid var(--rule-dark);
+    background: var(--card-bg);
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+  .meta-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase;
+  }
+  .meta-value { font-size: 0.88rem; color: var(--ink); font-weight: 500; }
+  .meta-divider { height: 1px; background: var(--rule); }
+
+  /* LAYOUT */
+  .page { max-width: 1200px; margin: 0 auto; padding: 0 3rem; }
+
+  /* CHAPTER */
+  .chapter {
+    padding: 5rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .chapter:last-child { border-bottom: none; }
+
+  .chapter-header {
+    display: grid; grid-template-columns: 80px 1fr; gap: 2rem;
+    align-items: start; margin-bottom: 4rem;
+  }
+  .chapter-num {
+    font-family: 'Fraunces', serif; font-weight: 900; font-style: italic;
+    font-size: 4rem; color: var(--ochre); opacity: 0.25; line-height: 1;
+    padding-top: 0.2rem;
+  }
+  .chapter-title {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.05;
+    letter-spacing: -0.02em; color: var(--ink);
+  }
+  .chapter-title em { color: var(--ochre); font-style: italic; }
+  .chapter-sub {
+    font-size: 1rem; color: var(--muted); margin-top: 0.8rem;
+    max-width: 620px; line-height: 1.75;
+  }
+
+  /* SECTION LABEL */
+  .sec-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.2em; color: var(--ochre); text-transform: uppercase;
+    margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.8rem;
+  }
+  .sec-label::before { content: '—'; opacity: 0.5; }
+
+  /* FLOW STEPS */
+  .flow { display: flex; flex-direction: column; gap: 0; margin: 2rem 0; }
+  .flow-step {
+    display: grid; grid-template-columns: 60px 1fr;
+    gap: 0; border-bottom: 1px solid var(--rule);
+    transition: background 0.2s;
+  }
+  .flow-step:last-child { border-bottom: none; }
+  .flow-step:hover { background: var(--card-bg); }
+  .flow-left {
+    padding: 1.8rem 1.5rem 1.8rem 0;
+    border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  }
+  .flow-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+    color: var(--ochre); letter-spacing: 0.1em; writing-mode: vertical-rl;
+  }
+  .flow-icon { font-size: 1.2rem; }
+  .flow-right { padding: 1.8rem 0 1.8rem 2rem; }
+  .flow-right h4 {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem;
+    color: var(--ink); margin-bottom: 0.5rem;
+  }
+  .flow-right p { font-size: 0.88rem; color: var(--muted); line-height: 1.72; margin-bottom: 0.8rem; }
+  .flow-right .flow-detail {
+    font-size: 0.82rem; color: var(--muted); line-height: 1.65;
+    padding: 0.8rem 1rem; background: var(--tag-bg);
+    border-left: 2px solid var(--ochre);
+  }
+
+  /* TAGS */
+  .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+  .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.08em; color: var(--ochre); text-transform: uppercase;
+    background: var(--tag-bg); padding: 0.25rem 0.65rem;
+    border: 1px solid rgba(196,123,43,0.2);
+  }
+  .tag.green { color: var(--sage); background: rgba(61,107,56,0.07); border-color: rgba(61,107,56,0.2); }
+  .tag.slate { color: var(--slate); background: rgba(42,50,64,0.07); border-color: rgba(42,50,64,0.2); }
+
+  /* FEATURE GRID */
+  .feature-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--rule-dark); border: 1px solid var(--rule-dark);
+    margin: 2rem 0;
+  }
+  .feature-card {
+    background: var(--card-bg); padding: 2rem 1.8rem;
+    transition: background 0.2s;
+  }
+  .feature-card:hover { background: #FFFEF9; }
+  .feature-card .fc-icon { font-size: 1.6rem; margin-bottom: 1rem; display: block; }
+  .feature-card h4 {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem;
+    color: var(--ink); margin-bottom: 0.5rem;
+  }
+  .feature-card p { font-size: 0.83rem; color: var(--muted); line-height: 1.7; }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin: 2rem 0; }
+  .two-col-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; margin: 2rem 0; }
+
+  /* CONTENT TYPE CARDS */
+  .content-types { display: flex; flex-direction: column; gap: 0; }
+  .ct-card {
+    display: grid; grid-template-columns: 200px 1fr 160px;
+    gap: 0; border-bottom: 1px solid var(--rule);
+    transition: background 0.2s;
+  }
+  .ct-card:last-child { border-bottom: none; }
+  .ct-card:hover { background: var(--card-bg); }
+  .ct-left {
+    padding: 2rem 2rem 2rem 0; border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .ct-icon { font-size: 1.8rem; margin-bottom: 0.6rem; display: block; }
+  .ct-name {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--ink);
+  }
+  .ct-type {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.12em; color: var(--ochre); text-transform: uppercase; margin-top: 0.3rem;
+  }
+  .ct-mid { padding: 2rem; }
+  .ct-mid p { font-size: 0.86rem; color: var(--muted); line-height: 1.72; margin-bottom: 0.8rem; }
+  .ct-mid .examples {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+  }
+  .example-pill {
+    font-size: 0.78rem; color: var(--ink); background: var(--tag-bg);
+    padding: 0.2rem 0.6rem; border-radius: 2px; font-style: italic;
+  }
+  .ct-right {
+    padding: 2rem 0 2rem 2rem; border-left: 1px solid var(--rule);
+    display: flex; flex-direction: column; gap: 0.8rem;
+  }
+  .ct-meta-item { display: flex; flex-direction: column; gap: 0.1rem; }
+  .ct-meta-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.52rem;
+    letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;
+  }
+  .ct-meta-val { font-size: 0.8rem; color: var(--ink); font-weight: 500; }
+
+  /* ENGAGEMENT */
+  .eng-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin: 2rem 0; }
+  .eng-card {
+    border: 1px solid var(--rule-dark); padding: 2rem;
+    position: relative; overflow: hidden;
+    background: var(--card-bg);
+  }
+  .eng-card::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+    background: var(--ochre);
+  }
+  .eng-card h4 {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem;
+    color: var(--ink); margin-bottom: 0.6rem; padding-left: 0.8rem;
+  }
+  .eng-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.72; padding-left: 0.8rem; }
+  .eng-card .eng-icon { font-size: 1.4rem; margin-bottom: 0.8rem; display: block; padding-left: 0.8rem; }
+  .eng-card .eng-why {
+    margin-top: 0.8rem; padding: 0.7rem 1rem 0.7rem 1.5rem;
+    background: rgba(196,123,43,0.05); border-top: 1px solid var(--rule);
+    font-size: 0.78rem; color: var(--ochre); line-height: 1.6; font-style: italic;
+  }
+
+  /* MODERATION */
+  .mod-table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.85rem; }
+  .mod-table th {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.57rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ochre);
+    padding: 0.8rem 1.2rem; text-align: left;
+    border-bottom: 2px solid var(--rule-dark); background: var(--tag-bg);
+  }
+  .mod-table td {
+    padding: 1rem 1.2rem; color: var(--muted);
+    border-bottom: 1px solid var(--rule); vertical-align: top;
+  }
+  .mod-table tr:last-child td { border-bottom: none; }
+  .mod-table tr:hover td { background: var(--card-bg); }
+  .severity { display: inline-block; padding: 0.15rem 0.5rem; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; }
+  .sev-low { background: rgba(61,107,56,0.1); color: var(--sage); }
+  .sev-med { background: rgba(212,168,71,0.12); color: #A07820; }
+  .sev-high { background: rgba(139,58,31,0.1); color: var(--rust); }
+
+  /* PERMISSION TIERS */
+  .tier-stack { display: flex; flex-direction: column; gap: 1px; background: var(--rule-dark); border: 1px solid var(--rule-dark); margin: 2rem 0; }
+  .tier {
+    background: var(--card-bg); padding: 0;
+    display: grid; grid-template-columns: 180px 1fr 1fr 1fr;
+  }
+  .tier-label {
+    padding: 1.5rem 1.5rem 1.5rem 2rem; border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column; justify-content: center; gap: 0.3rem;
+  }
+  .tier-name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.95rem; color: var(--ink); }
+  .tier-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.52rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ochre);
+  }
+  .tier-col { padding: 1.5rem; border-right: 1px solid var(--rule); }
+  .tier-col:last-child { border-right: none; }
+  .tier-col-head {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase;
+    margin-bottom: 0.7rem;
+  }
+  .tier-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
+  .tier-col ul li { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+  .tier-col ul li::before { content: '→'; color: var(--ochre); font-size: 0.7rem; opacity: 0.6; }
+  .tier.header-row { background: rgba(196,123,43,0.04); }
+  .tier.header-row .tier-col { display: flex; align-items: center; }
+  .tier.header-row .tier-col-head { margin: 0; }
+
+  /* SPEC BOX */
+  .spec-box {
+    border: 1px solid var(--rule-dark); padding: 2rem;
+    background: var(--card-bg); margin: 1.5rem 0;
+    position: relative;
+  }
+  .spec-box-label {
+    position: absolute; top: -0.6rem; left: 1.5rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    background: var(--paper); color: var(--ochre); padding: 0 0.5rem;
+  }
+  .spec-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+  .spec-item {
+    display: flex; gap: 1rem; align-items: flex-start;
+    font-size: 0.86rem; color: var(--muted); line-height: 1.6;
+  }
+  .spec-item::before { content: '·'; color: var(--ochre); font-size: 1.2rem; line-height: 1; margin-top: -0.1rem; flex-shrink: 0; }
+
+  /* PRINCIPLE BLOCK */
+  .principle {
+    padding: 2rem; border-left: 3px solid var(--ochre);
+    background: rgba(196,123,43,0.04); margin: 1.5rem 0;
+  }
+  .principle p {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 1.05rem; color: var(--ink); line-height: 1.6;
+  }
+  .principle .attr {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+    color: var(--ochre); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 0.6rem;
+  }
+
+  /* NOTIFICATION TYPES */
+  .notif-list { display: flex; flex-direction: column; gap: 0.8rem; margin: 1.5rem 0; }
+  .notif {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1rem 1.2rem; background: var(--card-bg); border: 1px solid var(--rule);
+  }
+  .notif-icon { font-size: 1.1rem; flex-shrink: 0; padding-top: 0.1rem; }
+  .notif-body h5 { font-size: 0.86rem; font-weight: 600; color: var(--ink); margin-bottom: 0.2rem; }
+  .notif-body p { font-size: 0.8rem; color: var(--muted); line-height: 1.55; }
+  .notif-body .sample {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+    color: var(--ochre); margin-top: 0.4rem; font-style: italic;
+  }
+
+  /* PRIVACY */
+  .privacy-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin: 2rem 0; }
+  .privacy-card { border: 1px solid var(--rule-dark); padding: 1.8rem; background: var(--card-bg); }
+  .privacy-card h4 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.95rem; color: var(--ink); margin-bottom: 0.8rem; }
+  .privacy-card ul { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+  .privacy-card ul li { font-size: 0.82rem; color: var(--muted); display: flex; align-items: flex-start; gap: 0.5rem; line-height: 1.55; }
+  .privacy-card ul li::before { content: '✓'; color: var(--sage); font-size: 0.7rem; flex-shrink: 0; padding-top: 0.15rem; }
+
+  /* SECTION DIVIDER */
+  .sec-divider { height: 1px; background: var(--rule); margin: 3rem 0; }
+
+  /* FOOTER */
+  footer {
+    border-top: 2px solid var(--rule-dark);
+    padding: 3rem;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card-bg); max-width: 1200px; margin: 0 auto;
+  }
+  .footer-logo { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.3rem; color: var(--ochre); letter-spacing: -0.02em; }
+  .footer-info { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--muted); text-align: right; line-height: 1.8; }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 1.2rem; }
+    .nav-toc { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 4rem 1.5rem 3rem; }
+    .hero-meta { display: none; }
+    .page { padding: 0 1.5rem; }
+    .chapter-header { grid-template-columns: 1fr; }
+    .chapter-num { font-size: 2.5rem; }
+    .feature-grid, .two-col, .two-col-3, .eng-grid, .privacy-grid { grid-template-columns: 1fr; }
+    .ct-card { grid-template-columns: 1fr; }
+    .ct-left { border-right: none; border-bottom: 1px solid var(--rule); padding: 1.5rem 0; }
+    .ct-right { border-left: none; border-top: 1px solid var(--rule); padding: 1.5rem 0; }
+    .tier { grid-template-columns: 1fr; }
+    .tier-label { border-right: none; border-bottom: 1px solid var(--rule); }
+    .tier-col { border-right: none; border-bottom: 1px solid var(--rule); }
+    footer { flex-direction: column; gap: 1.5rem; text-align: center; padding: 2rem 1.5rem; }
+    .footer-info { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <span class="nav-logo">Hapa</span>
+    <span class="nav-doc">Feature Specification — v1.0</span>
+  </div>
+  <ul class="nav-toc">
+    <li><a href="#registration">Registration</a></li>
+    <li><a href="#business">Business</a></li>
+    <li><a href="#creators">Creators</a></li>
+    <li><a href="#content">Content</a></li>
+    <li><a href="#engagement">Engagement</a></li>
+    <li><a href="#moderation">Moderation</a></li>
+    <li><a href="#notifications">Notifications</a></li>
+    <li><a href="#privacy">Privacy</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <div class="hero-eyebrow">Hapa Feature Specification Document</div>
+    <h1 class="hero-title">How Hapa<br><em>works</em> —<br>every layer.</h1>
+    <p class="hero-desc">A complete specification of the Hapa platform covering user registration flows, business onboarding, creator systems, content formats, engagement mechanics, moderation frameworks, notification logic, and privacy architecture. This document is the product blueprint.</p>
+  </div>
+  <div class="hero-meta">
+    <div class="meta-item">
+      <span class="meta-label">Document Type</span>
+      <span class="meta-value">Feature Specification</span>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-item">
+      <span class="meta-label">Version</span>
+      <span class="meta-value">1.0 — 2026</span>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-item">
+      <span class="meta-label">Covers</span>
+      <span class="meta-value">8 Feature Areas</span>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-item">
+      <span class="meta-label">Chapters</span>
+      <span class="meta-value">User · Business · Creator · Content · Engagement · Moderation · Notifications · Privacy</span>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-item">
+      <span class="meta-label">Platform</span>
+      <span class="meta-value">hapa.world</span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHAPTER 1: USER REGISTRATION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="chapter" id="registration">
+  <div class="chapter-header">
+    <div class="chapter-num">1</div>
+    <div>
+      <h2 class="chapter-title">User <em>Registration</em><br>& Onboarding</h2>
+      <p class="chapter-sub">The first thirty seconds of Hapa must feel like the platform already knows what it's doing. Registration is not a form — it is Hapa's first act of intelligence. Location before identity. Context before data.</p>
+    </div>
+  </div>
+
+  <div class="principle">
+    <p>"The first thing Hapa asks is not your name or your email. It asks where you are. Because that is the only question that matters."</p>
+    <div class="attr">// Design Principle — Registration</div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">1.1 — Registration Flow</div>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-left">
+        <span class="flow-num">STEP 01</span>
+        <span class="flow-icon">📍</span>
+      </div>
+      <div class="flow-right">
+        <h4>Location First</h4>
+        <p>The app opens to a single screen: a pulsing location pin over a softly blurred map of the user's detected city. One line of text: <em>"Hapa is live in [City Name]."</em> One button: <em>"I'm here."</em></p>
+        <div class="flow-detail">Location permission is requested at this exact moment — before any sign-up form. Users who grant permission see their city animate into view. Users who decline are shown a manual city search. Location is never forced, but the experience is clearly richer with it. The emotional message: Hapa already knows where you are. It is ready for you.</div>
+        <div class="tags"><span class="tag">GPS detection</span><span class="tag">Manual fallback</span><span class="tag">City-level only at this stage</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left">
+        <span class="flow-num">STEP 02</span>
+        <span class="flow-icon">🔑</span>
+      </div>
+      <div class="flow-right">
+        <h4>Quick Account Creation</h4>
+        <p>After location, account creation is one screen. Phone number preferred — because in African markets, phone numbers are primary identity. Email optional. Social login (Google) available as an alternative path.</p>
+        <div class="flow-detail">Phone number → OTP verification → done. No email confirmation loops. No password complexity requirements at this stage. The goal is to be inside the app within 90 seconds of first open. Friction here is a product failure.</div>
+        <div class="tags"><span class="tag">Phone + OTP</span><span class="tag">Google OAuth</span><span class="tag">Email optional</span><span class="tag">No passwords required</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left">
+        <span class="flow-num">STEP 03</span>
+        <span class="flow-icon">🧩</span>
+      </div>
+      <div class="flow-right">
+        <h4>Identity Setup — Who Are You Here?</h4>
+        <p>A minimal profile setup screen. Name, optional photo, and one critical question: <em>"How would you describe yourself in this city?"</em> Four tile options — resident, new arrival, traveller passing through, or business owner. This single choice shapes the entire first-session experience.</p>
+        <div class="flow-detail">This is not demographic collection. It is context collection. A "new arrival" gets cultural onboarding content surfaced immediately. A "resident" gets local trending content. A "traveller" gets survival-layer recommendations. A "business owner" gets directed toward Hapa Business. Each path is meaningfully different from the first tap.</div>
+        <div class="tags"><span class="tag">Resident</span><span class="tag">New Arrival</span><span class="tag">Traveller</span><span class="tag">Business Owner</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left">
+        <span class="flow-num">STEP 04</span>
+        <span class="flow-icon">🎯</span>
+      </div>
+      <div class="flow-right">
+        <h4>Interest Selection — What Do You Care About?</h4>
+        <p>A visual tile grid of interest categories. Users pick three to seven. These seed the recommendation engine immediately — no cold start. The feed on day one already feels relevant.</p>
+        <div class="flow-detail">
+          Categories: Food & Dining · Nightlife & Entertainment · Arts & Culture · Business & Networking · Sports & Fitness · Faith & Community · Family & Parenting · Fashion & Style · Music & Events · Street Life · Travel · Tech · Nature & Outdoors. These are not permanent — Hapa learns and adjusts them continuously based on behaviour.
+        </div>
+        <div class="tags"><span class="tag">Visual tile grid</span><span class="tag">3–7 selections</span><span class="tag">Seeds recommendation engine</span><span class="tag">Adjustable anytime</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left">
+        <span class="flow-num">STEP 05</span>
+        <span class="flow-icon">🌍</span>
+      </div>
+      <div class="flow-right">
+        <h4>Language Preference</h4>
+        <p>Select primary language for content and AI responses. English is default. Local languages available per city: Luganda (Kampala), Swahili (Nairobi / Dar), Yoruba (Lagos), Twi (Accra), Amharic (Addis). More languages unlock as Hapa expands.</p>
+        <div class="flow-detail">Language preference affects: AI guide responses, community content priority, creator discovery, business listing descriptions. A Luganda speaker in Kampala sees a Kampala experience that feels genuinely local — not a translated version of a Western product.</div>
+        <div class="tags"><span class="tag">English</span><span class="tag">Luganda</span><span class="tag">Swahili</span><span class="tag">Yoruba</span><span class="tag">Twi</span><span class="tag">Amharic</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left">
+        <span class="flow-num">STEP 06</span>
+        <span class="flow-icon">🏠</span>
+      </div>
+      <div class="flow-right">
+        <h4>First Feed — Hapa Is Alive</h4>
+        <p>Registration complete. No tutorial overlay. No empty state. The user lands directly in a populated, location-relevant feed. For day-one cities, content is seeded by founding local creators. For new cities, Hapa Guide content loads as the first experience.</p>
+        <div class="flow-detail">The principle: never show an empty app. The first feed must feel alive, local, and worth scrolling. Hapa's product quality is judged in this first scroll. Every founding city launch includes a minimum of 200 seeded posts before public opening.</div>
+        <div class="tags"><span class="tag">Pre-seeded content</span><span class="tag">No empty states</span><span class="tag">Immediate relevance</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">1.2 — User Profile Architecture</div>
+  <div class="two-col">
+    <div>
+      <div class="spec-box">
+        <span class="spec-box-label">Public Profile Fields</span>
+        <div class="spec-list">
+          <div class="spec-item">Display name and optional username (@handle)</div>
+          <div class="spec-item">Profile photo or generated avatar</div>
+          <div class="spec-item">One-line bio — free text, 80 characters</div>
+          <div class="spec-item">Current city (auto-detected, user-confirmable)</div>
+          <div class="spec-item">Home city if different from current location</div>
+          <div class="spec-item">Cities lived in — optional journey trail</div>
+          <div class="spec-item">Interest badges — populated from selections</div>
+          <div class="spec-item">Hapa trust score — earned, not assigned</div>
+          <div class="spec-item">Local reputation — city-specific credibility</div>
+          <div class="spec-item">Posts, reviews, and cultural contributions count</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="spec-box">
+        <span class="spec-box-label">Private / System Fields</span>
+        <div class="spec-list">
+          <div class="spec-item">Phone number — primary identity anchor</div>
+          <div class="spec-item">Location history — anonymised, used for recommendations only</div>
+          <div class="spec-item">Behaviour signals — time-of-day patterns, content engagement</div>
+          <div class="spec-item">Notification preferences per category</div>
+          <div class="spec-item">Privacy mode settings — ghost, visible, discoverable</div>
+          <div class="spec-item">Blocked users and reported content log</div>
+          <div class="spec-item">Creator or business affiliations</div>
+          <div class="spec-item">Booking and transaction history</div>
+          <div class="spec-item">Saved places, posts, and guides</div>
+          <div class="spec-item">Language and accessibility preferences</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">1.3 — User Permission Tiers</div>
+  <div class="tier-stack">
+    <div class="tier header-row">
+      <div class="tier-label"></div>
+      <div class="tier-col"><div class="tier-col-head">Content & Posting</div></div>
+      <div class="tier-col"><div class="tier-col-head">Discovery & Social</div></div>
+      <div class="tier-col"><div class="tier-col-head">Business & Booking</div></div>
+    </div>
+    <div class="tier">
+      <div class="tier-label">
+        <div class="tier-name">Guest</div>
+        <div class="tier-badge">No account</div>
+      </div>
+      <div class="tier-col"><ul><li>View public posts</li><li>Browse Hapa Guide</li><li>Search places</li></ul></div>
+      <div class="tier-col"><ul><li>No social features</li><li>No people discovery</li></ul></div>
+      <div class="tier-col"><ul><li>View business listings</li><li>No booking</li></ul></div>
+    </div>
+    <div class="tier">
+      <div class="tier-label">
+        <div class="tier-name">Member</div>
+        <div class="tier-badge">Free account</div>
+      </div>
+      <div class="tier-col"><ul><li>Post all content types</li><li>Leave reviews</li><li>Submit cultural notes</li><li>React and comment</li></ul></div>
+      <div class="tier-col"><ul><li>Follow users & creators</li><li>People discovery</li><li>Friend circles</li><li>Community questions</li></ul></div>
+      <div class="tier-col"><ul><li>Book via Hapa Places</li><li>Save places</li><li>Basic recommendations</li></ul></div>
+    </div>
+    <div class="tier">
+      <div class="tier-label">
+        <div class="tier-name">Hapa Pro</div>
+        <div class="tier-badge">$4.99–$9.99/mo</div>
+      </div>
+      <div class="tier-col"><ul><li>Everything in Member</li><li>Extended video length</li><li>Creator tools access</li><li>Post scheduling</li></ul></div>
+      <div class="tier-col"><ul><li>Deep people discovery</li><li>Multi-city profiles</li><li>Priority creator access</li><li>Offline guide download</li></ul></div>
+      <div class="tier-col"><ul><li>Advanced AI responses</li><li>Multi-city trip planning</li><li>Priority booking support</li><li>Exclusive promotions</li></ul></div>
+    </div>
+    <div class="tier">
+      <div class="tier-label">
+        <div class="tier-name">Verified Local</div>
+        <div class="tier-badge">Earned status</div>
+      </div>
+      <div class="tier-col"><ul><li>Verified badge on posts</li><li>Cultural notes featured</li><li>Content boosted locally</li></ul></div>
+      <div class="tier-col"><ul><li>Local authority status</li><li>Featured in People discovery</li><li>City ambassador role</li></ul></div>
+      <div class="tier-col"><ul><li>Business partner eligibility</li><li>Creator fund access</li><li>Early feature access</li></ul></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHAPTER 2: BUSINESS ONBOARDING -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="chapter" id="business">
+  <div class="chapter-header">
+    <div class="chapter-num">2</div>
+    <div>
+      <h2 class="chapter-title">Business<br><em>Onboarding</em></h2>
+      <p class="chapter-sub">A mama mboga in Kampala and a hotel GM in Nairobi must both be able to register their business without calling support. The target: live on Hapa in under 10 minutes. Any more friction and we lose them.</p>
+    </div>
+  </div>
+
+  <div class="principle">
+    <p>"Free to start. Live in 10 minutes. Paid when they see value. That is the only business onboarding philosophy that works in emerging markets."</p>
+    <div class="attr">// Design Principle — Business Onboarding</div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">2.1 — Business Registration Flow</div>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-left"><span class="flow-num">STEP 01</span><span class="flow-icon">🗂️</span></div>
+      <div class="flow-right">
+        <h4>Category Selection</h4>
+        <p>Visual tile grid — not a dropdown. Business owner taps their category. Simple, fast, no ambiguity.</p>
+        <div class="flow-detail">
+          Primary categories: Food & Dining · Accommodation · Transport & Rides · Health & Wellness · Beauty & Grooming · Retail & Shopping · Entertainment & Nightlife · Professional Services · Education · Events & Venues · Arts & Culture · Faith & Community · Technology · Agriculture & Markets. Sub-categories load after primary selection for precision.
+        </div>
+        <div class="tags"><span class="tag">Visual tiles</span><span class="tag">Primary + sub-category</span><span class="tag">Multi-category supported</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left"><span class="flow-num">STEP 02</span><span class="flow-icon">📌</span></div>
+      <div class="flow-right">
+        <h4>Location Pinning</h4>
+        <p>The business pins their exact location on a map. Auto-detected GPS as starting point, draggable to precise spot. Street address field optional — many informal businesses don't have formal addresses. The pin is the address.</p>
+        <div class="flow-detail">This is critical infrastructure. Hapa's entire recommendation engine depends on accurate business locations. Businesses with imprecise pins surface less frequently. The UI makes this clear — accuracy is rewarded with visibility.</div>
+        <div class="tags"><span class="tag">GPS auto-detect</span><span class="tag">Drag to pin</span><span class="tag">No formal address required</span><span class="tag">What3Words integration optional</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left"><span class="flow-num">STEP 03</span><span class="flow-icon">📝</span></div>
+      <div class="flow-right">
+        <h4>Basic Profile — Minimum Viable Listing</h4>
+        <p>Five fields. That's it. Business name, one cover photo, one sentence description (120 characters), phone number, and opening hours. Submit and go live. Everything else is optional enrichment.</p>
+        <div class="flow-detail">
+          The minimum viable listing philosophy: it is better to have 1,000 businesses with basic profiles than 200 businesses with perfect ones. We lower the floor dramatically. Businesses can enrich their profiles at any time. The first priority is getting them on the map.
+        </div>
+        <div class="tags"><span class="tag">5 required fields</span><span class="tag">Cover photo</span><span class="tag">120-char description</span><span class="tag">Opening hours</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left"><span class="flow-num">STEP 04</span><span class="flow-icon">✅</span></div>
+      <div class="flow-right">
+        <h4>Verification</h4>
+        <p>Not a document check — a human confirmation. Hapa sends a WhatsApp message or phone call to the registered number. Business owner confirms they are real. Verified badge applied within minutes.</p>
+        <div class="flow-detail">
+          Why WhatsApp? Because in East and West Africa, WhatsApp is primary business communication. Every business owner has it. Email verification loops are a Western assumption. Hapa meets businesses where they already are. For larger businesses (hotels, chains), a secondary document verification tier is available for an enhanced trust badge.
+        </div>
+        <div class="tags"><span class="tag">WhatsApp confirmation</span><span class="tag">Phone call fallback</span><span class="tag">Enhanced tier for chains</span><span class="tag">Minutes not days</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left"><span class="flow-num">STEP 05</span><span class="flow-icon">🎯</span></div>
+      <div class="flow-right">
+        <h4>Tier Selection — Free First</h4>
+        <p>After verification, a simple screen explains what the free tier gives them. No credit card. No trial period. They are live. An upgrade prompt appears after 30 days — once they have seen the value.</p>
+        <div class="flow-detail">
+          Free tier: basic listing, location pin, standard search visibility, review collection, phone/WhatsApp contact button. Paid tiers add: priority placement in searches, Hapa Boost access (push promotions), booking integration, analytics dashboard, creator partnership eligibility, multiple photos, menu or service listing, staff profiles.
+        </div>
+        <div class="tags"><span class="tag">Free to start</span><span class="tag">No card required</span><span class="tag">Upgrade after 30 days</span><span class="tag">Value first</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">2.2 — Business Dashboard Features</div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <span class="fc-icon">📊</span>
+      <h4>Analytics Dashboard</h4>
+      <p>Profile views, search appearances, direction requests, booking clicks, review summaries, and Hapa Boost campaign performance. Presented simply — no data science degree required to understand it.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">⚡</span>
+      <h4>Hapa Boost</h4>
+      <p>Create a hyper-local promotion in three taps. Set radius (100m to 5km), set duration (1 hour to 7 days), write the offer, pay via mobile money or card. Goes live instantly to qualifying nearby users.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">🗓️</span>
+      <h4>Booking Management</h4>
+      <p>View, confirm, and manage in-app bookings from Hapa users. Set availability, capacity, and instant vs. confirmed booking modes. Integrated with WhatsApp for direct customer communication.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">⭐</span>
+      <h4>Review Management</h4>
+      <p>Read and respond to user reviews. Flag inappropriate reviews for moderation. Highlight top reviews on the business profile. Reviews are location-verified — only users who were physically nearby can review.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">🎙️</span>
+      <h4>Creator Partnerships</h4>
+      <p>Browse local creators in your category and city. Send partnership proposals directly through Hapa. Track creator-attributed visits and bookings. Pay creators through the platform. Hapa handles attribution and payment.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">🏷️</span>
+      <h4>Offer & Menu Builder</h4>
+      <p>Build a live menu or service list directly in the app. Tag special offers, daily specials, seasonal items. Customers see live pricing before they arrive. Reduces no-shows and price confusion.</p>
+    </div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">2.3 — Business Tiers</div>
+  <div class="two-col-3">
+    <div class="spec-box">
+      <span class="spec-box-label">Free — Basic Presence</span>
+      <div class="spec-list">
+        <div class="spec-item">Location pin on Hapa Places</div>
+        <div class="spec-item">Basic profile — name, photo, description</div>
+        <div class="spec-item">Phone/WhatsApp contact button</div>
+        <div class="spec-item">Review collection</div>
+        <div class="spec-item">Standard search visibility</div>
+        <div class="spec-item">Verified badge (after WhatsApp confirm)</div>
+      </div>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Growth — $10–$30/month</span>
+      <div class="spec-list">
+        <div class="spec-item">Everything in Free</div>
+        <div class="spec-item">Priority search placement</div>
+        <div class="spec-item">Hapa Boost access</div>
+        <div class="spec-item">Gallery (up to 20 photos)</div>
+        <div class="spec-item">Menu / services list</div>
+        <div class="spec-item">Basic analytics dashboard</div>
+        <div class="spec-item">Review response tools</div>
+        <div class="spec-item">In-app booking (up to 50/month)</div>
+      </div>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Pro — $30–$80/month</span>
+      <div class="spec-list">
+        <div class="spec-item">Everything in Growth</div>
+        <div class="spec-item">Top-of-category placement</div>
+        <div class="spec-item">Unlimited bookings</div>
+        <div class="spec-item">Creator partnership access</div>
+        <div class="spec-item">Full analytics + export</div>
+        <div class="spec-item">Multiple branch support</div>
+        <div class="spec-item">Staff profiles</div>
+        <div class="spec-item">API integration (POS systems)</div>
+        <div class="spec-item">Dedicated Hapa support</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHAPTER 3: CREATOR SYSTEM -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="chapter" id="creators">
+  <div class="chapter-header">
+    <div class="chapter-num">3</div>
+    <div>
+      <h2 class="chapter-title">The Creator<br><em>System</em></h2>
+      <p class="chapter-sub">Hapa Voices is the local creator layer. It exists to solve the single biggest failure of the African creator economy: audience reach without local impact. On Hapa, a creator's audience actually shows up.</p>
+    </div>
+  </div>
+
+  <div class="principle">
+    <p>"A food creator in Lagos with 50,000 local followers is worth more to a restaurant than a global creator with 5 million followers who are mostly abroad. Hapa is the first platform that values local depth over global breadth."</p>
+    <div class="attr">// Design Principle — Creator System</div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">3.1 — Becoming a Creator on Hapa</div>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-left"><span class="flow-num">STEP 01</span><span class="flow-icon">✍️</span></div>
+      <div class="flow-right">
+        <h4>Creator Application</h4>
+        <p>Any user with a verified account can apply to become a Hapa Creator. The application asks three things: what city are you based in, what is your content focus, and submit three examples of content you'd post on Hapa.</p>
+        <div class="flow-detail">No follower threshold to apply. Hapa is not looking for influencers with big existing audiences — it is looking for genuinely knowledgeable locals. A boda driver who knows every shortcut in Kampala is a more valuable Hapa Creator than a micro-celebrity with 10,000 followers who never leaves their apartment.</div>
+        <div class="tags"><span class="tag">Open application</span><span class="tag">No minimum followers</span><span class="tag">Content examples required</span><span class="tag">City-specific</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left"><span class="flow-num">STEP 02</span><span class="flow-icon">🔍</span></div>
+      <div class="flow-right">
+        <h4>Review & Verification</h4>
+        <p>Hapa's local community team reviews applications within 48 hours. They are looking for: genuine local knowledge, authentic voice, and content that serves the Hapa community rather than just promoting products.</p>
+        <div class="flow-detail">The review is human-first, not algorithmic. In each launch city, Hapa maintains a small local team of 2–3 community managers who know the city deeply. They are the judges of what constitutes genuine local knowledge. This is a quality moat that no algorithm can replicate.</div>
+        <div class="tags"><span class="tag">Human review</span><span class="tag">48-hour turnaround</span><span class="tag">Local team judges</span></div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-left"><span class="flow-num">STEP 03</span><span class="flow-icon">🏅</span></div>
+      <div class="flow-right">
+        <h4>Creator Tier Assignment</h4>
+        <p>Approved creators are placed on one of three tiers based on their content quality, local credibility, and community contribution. Tiers determine content reach, monetisation access, and platform support level.</p>
+        <div class="flow-detail">
+          Rising Voice — New creators, building audience. Access to basic creator tools, standard reach, creator community access. Local Voice — Established creators with strong local engagement. Priority feed placement, Hapa Boost co-funding, business partnership eligibility. City Voice — Hapa's top creators per city. Featured placement, creator fund access, city ambassador status, media opportunities.
+        </div>
+        <div class="tags"><span class="tag">Rising Voice</span><span class="tag">Local Voice</span><span class="tag">City Voice</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">3.2 — Creator Tools</div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <span class="fc-icon">📱</span>
+      <h4>Creator Studio</h4>
+      <p>A dedicated creation interface separate from the standard user feed. Post composer with location tagging, content type selector, audience targeting (city, neighbourhood, interest group), scheduling, and preview.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">📈</span>
+      <h4>Creator Analytics</h4>
+      <p>Reach by neighbourhood, engagement by content type, follower growth curve, "been here" conversions, business partnership performance, and weekly summary reports sent via WhatsApp or email.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">🤝</span>
+      <h4>Partnership Hub</h4>
+      <p>A dedicated section where businesses can discover and approach creators, and creators can browse partnership briefs. Hapa mediates proposals, handles contracts through the platform, and processes payments.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">💰</span>
+      <h4>Earnings Dashboard</h4>
+      <p>Tracks income from business partnerships, creator fund distributions, Hapa Pro tip features, and exclusive content access. Payouts via mobile money (M-Pesa, MTN MoMo, Airtel Money) or bank transfer.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">🗺️</span>
+      <h4>Local Map Layer</h4>
+      <p>Creators can build and publish their own curated city maps — "Best Suya in Lagos by [Creator Name]", "Hidden Gems of Kampala". These maps are shareable, bookmarkable, and surface in Hapa Guide.</p>
+    </div>
+    <div class="feature-card">
+      <span class="fc-icon">🎓</span>
+      <h4>Creator Academy</h4>
+      <p>In-app learning resources: how to write great local reviews, how to shoot compelling location content on a phone, how to approach business partnerships, how to build a local audience consistently.</p>
+    </div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">3.3 — Creator Monetisation Paths</div>
+  <div class="two-col">
+    <div class="spec-box">
+      <span class="spec-box-label">Platform-Native Revenue</span>
+      <div class="spec-list">
+        <div class="spec-item">Creator Fund — monthly distribution to top Local Voice and City Voice creators based on engagement quality, not just quantity</div>
+        <div class="spec-item">Business Partnership Commissions — 85% of deal value goes to creator, 15% to Hapa</div>
+        <div class="spec-item">Hapa Pro Tips — Pro subscribers can tip creators for exceptional content</div>
+        <div class="spec-item">Exclusive Content Access — creators can gate premium content for followers who pay a monthly subscription</div>
+        <div class="spec-item">Curated Map Sponsorships — businesses can sponsor a creator's curated map of their neighbourhood</div>
+      </div>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Attribution & Conversion Tracking</span>
+      <div class="spec-list">
+        <div class="spec-item">"Been Here" count per post — users who visited a recommended spot confirm it, giving creators a real conversion metric</div>
+        <div class="spec-item">Booking attribution — when a user books a business directly from a creator's post, both creator and business see the attribution</div>
+        <div class="spec-item">Reach by neighbourhood — creators see exactly which parts of their city engage most with their content</div>
+        <div class="spec-item">Engagement quality score — weighted score combining "been here", saves, shares, and comments (not just likes)</div>
+        <div class="spec-item">Monthly creator report — full performance breakdown delivered automatically</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHAPTER 4: CONTENT FORMATS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="chapter" id="content">
+  <div class="chapter-header">
+    <div class="chapter-num">4</div>
+    <div>
+      <h2 class="chapter-title">Content<br><em>Formats</em></h2>
+      <p class="chapter-sub">Every content format on Hapa exists because it serves a specific local need. There are no formats that exist just because other platforms have them. Each one feeds a layer of the Hapa intelligence engine.</p>
+    </div>
+  </div>
+
+  <div class="sec-label">4.1 — Core Content Types</div>
+  <div class="content-types">
+
+    <div class="ct-card">
+      <div class="ct-left">
+        <span class="ct-icon">📍</span>
+        <span class="ct-name">Location Post</span>
+        <span class="ct-type">Core format</span>
+      </div>
+      <div class="ct-mid">
+        <p>The fundamental unit of Hapa content. A photo, short video (up to 60s), or text update tagged to an exact location. <em>"I'm at this spot right now. Here's what it's like."</em> Visible to everyone within a configurable radius and all followers.</p>
+        <div class="examples">
+          <span class="example-pill">"The vibes at Jazz Corner tonight are immaculate"</span>
+          <span class="example-pill">"Queue at Kaldi's is 45 mins today — go tomorrow morning"</span>
+          <span class="example-pill">"This market opens at 6am. Best produce gone by 8."</span>
+        </div>
+      </div>
+      <div class="ct-right">
+        <div class="ct-meta-item"><span class="ct-meta-label">Max length</span><span class="ct-meta-val">60s video / 280 chars text</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Location tag</span><span class="ct-meta-val">Required</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Feeds into</span><span class="ct-meta-val">Hapa Now · Places</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Expires</span><span class="ct-meta-val">Never (searchable)</span></div>
+      </div>
+    </div>
+
+    <div class="ct-card">
+      <div class="ct-left">
+        <span class="ct-icon">⚡</span>
+        <span class="ct-name">Hapa Flash</span>
+        <span class="ct-type">Time-sensitive</span>
+      </div>
+      <div class="ct-mid">
+        <p>Real-time, urgent, hyper-local updates. Events starting now, road conditions, market closures, spontaneous gatherings, weather alerts. These expire automatically — 2 hours by default, up to 24 hours maximum. This feeds directly into Hapa Now.</p>
+        <div class="examples">
+          <span class="example-pill">"Live music starting in 20 mins at Cayenne — free entry"</span>
+          <span class="example-pill">"Kisenyi road flooded from the roundabout — use Entebbe Rd"</span>
+          <span class="example-pill">"Flash sale at Owino Market — fabric stalls Section C"</span>
+        </div>
+      </div>
+      <div class="ct-right">
+        <div class="ct-meta-item"><span class="ct-meta-label">Max length</span><span class="ct-meta-val">30s video / 140 chars</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Location tag</span><span class="ct-meta-val">Required</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Feeds into</span><span class="ct-meta-val">Hapa Now · Notifications</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Expires</span><span class="ct-meta-val">2–24 hours</span></div>
+      </div>
+    </div>
+
+    <div class="ct-card">
+      <div class="ct-left">
+        <span class="ct-icon">⭐</span>
+        <span class="ct-name">Local Review</span>
+        <span class="ct-type">Trust content</span>
+      </div>
+      <div class="ct-mid">
+        <p>Honest, short reviews of a place or business. Not TripAdvisor paragraphs. Real talk from real people. 1–5 rating plus up to 200 characters. Photos optional. Gated behind location proximity — you can only review somewhere you were actually near.</p>
+        <div class="examples">
+          <span class="example-pill">"Chicken is 10/10. Ask for the pepper sauce — it's not on the menu."</span>
+          <span class="example-pill">"Rooms are clean. Generator goes off at midnight. Bring a torch."</span>
+          <span class="example-pill">"Mechanic is honest with prices. Rare in this area."</span>
+        </div>
+      </div>
+      <div class="ct-right">
+        <div class="ct-meta-item"><span class="ct-meta-label">Max length</span><span class="ct-meta-val">200 chars + photos</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Location gate</span><span class="ct-meta-val">Must have been within 500m</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Feeds into</span><span class="ct-meta-val">Hapa Places · Recommendations</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Expires</span><span class="ct-meta-val">Never</span></div>
+      </div>
+    </div>
+
+    <div class="ct-card">
+      <div class="ct-left">
+        <span class="ct-icon">🌍</span>
+        <span class="ct-name">Cultural Note</span>
+        <span class="ct-type">Intelligence layer</span>
+      </div>
+      <div class="ct-mid">
+        <p>Local knowledge that doesn't fit a review. Slangs, customs, greetings, unwritten rules, things visitors always misunderstand. Tagged to a city or neighbourhood. These feed directly into Hapa Guide. Community upvotes surface the most accurate notes to the top.</p>
+        <div class="examples">
+          <span class="example-pill">"Saying 'Webale nyo' to a market seller gets you better prices in Kampala."</span>
+          <span class="example-pill">"In Lagos, 'I'm on my way' can mean anywhere from 5 mins to 2 hours."</span>
+          <span class="example-pill">"Nairobi matatus always leave when full — never from the schedule."</span>
+        </div>
+      </div>
+      <div class="ct-right">
+        <div class="ct-meta-item"><span class="ct-meta-label">Max length</span><span class="ct-meta-val">300 chars</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Tag</span><span class="ct-meta-val">City or neighbourhood</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Feeds into</span><span class="ct-meta-val">Hapa Guide</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Verification</span><span class="ct-meta-val">Community upvote</span></div>
+      </div>
+    </div>
+
+    <div class="ct-card">
+      <div class="ct-left">
+        <span class="ct-icon">📖</span>
+        <span class="ct-name">Neighbourhood Diary</span>
+        <span class="ct-type">Long-form</span>
+      </div>
+      <div class="ct-mid">
+        <p>Longer-form creator content. A walk through a neighbourhood. A food crawl. A cultural deep-dive. A "what's changing in this area" essay. Up to 1,500 words with up to 10 photos and location pins embedded. This is Hapa's editorial content layer — the content that builds loyal local followings and lives forever.</p>
+        <div class="examples">
+          <span class="example-pill">"Kabalagala at 2am — a photo essay"</span>
+          <span class="example-pill">"Everything changing in Lekki Phase 1 right now"</span>
+          <span class="example-pill">"The last ugali spots in Nairobi that still cost under 100 shillings"</span>
+        </div>
+      </div>
+      <div class="ct-right">
+        <div class="ct-meta-item"><span class="ct-meta-label">Max length</span><span class="ct-meta-val">1,500 words + 10 photos</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Access</span><span class="ct-meta-val">Creators only</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Feeds into</span><span class="ct-meta-val">Hapa Guide · Creator profile</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Expires</span><span class="ct-meta-val">Never — evergreen</span></div>
+      </div>
+    </div>
+
+    <div class="ct-card">
+      <div class="ct-left">
+        <span class="ct-icon">❓</span>
+        <span class="ct-name">Community Ask</span>
+        <span class="ct-type">Social utility</span>
+      </div>
+      <div class="ct-mid">
+        <p>A question posted to the local community. Tagged to a city or neighbourhood. The WhatsApp group experience — but permanent, searchable, and location-specific. Anyone nearby can answer. The best answers get upvoted. This content becomes a permanent local knowledge resource.</p>
+        <div class="examples">
+          <span class="example-pill">"Where can I find a good tailor in Kololo who does men's shirts?"</span>
+          <span class="example-pill">"Best mechanic in Surulere for a Toyota Camry — honest prices?"</span>
+          <span class="example-pill">"Is the road from Kampala to Masaka safe to drive right now?"</span>
+        </div>
+      </div>
+      <div class="ct-right">
+        <div class="ct-meta-item"><span class="ct-meta-label">Max length</span><span class="ct-meta-val">140 chars question</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Visibility</span><span class="ct-meta-val">City or neighbourhood</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Feeds into</span><span class="ct-meta-val">Hapa Guide · Search index</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Answers</span><span class="ct-meta-val">Community upvoted</span></div>
+      </div>
+    </div>
+
+    <div class="ct-card">
+      <div class="ct-left">
+        <span class="ct-icon">🗺️</span>
+        <span class="ct-name">Curated Map</span>
+        <span class="ct-type">Creator exclusive</span>
+      </div>
+      <div class="ct-mid">
+        <p>A creator-built collection of places, routes, or experiences mapped onto a city. Shareable, bookmarkable, and discoverable by anyone in that city. These become the definitive local guides over time — replacing generic travel content with lived local knowledge.</p>
+        <div class="examples">
+          <span class="example-pill">"The best nyama choma trail in Nairobi — 7 spots, ranked"</span>
+          <span class="example-pill">"Kampala by boda-boda: routes only locals know"</span>
+          <span class="example-pill">"Lagos sunset spots — where to be at 6pm"</span>
+        </div>
+      </div>
+      <div class="ct-right">
+        <div class="ct-meta-item"><span class="ct-meta-label">Max pins</span><span class="ct-meta-val">25 per map</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Access</span><span class="ct-meta-val">Creators only</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Feeds into</span><span class="ct-meta-val">Hapa Guide · Places</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Sponsorable</span><span class="ct-meta-val">Yes — by businesses</span></div>
+      </div>
+    </div>
+
+    <div class="ct-card">
+      <div class="ct-left">
+        <span class="ct-icon">🎬</span>
+        <span class="ct-name">Hapa Reel</span>
+        <span class="ct-type">Short video</span>
+      </div>
+      <div class="ct-mid">
+        <p>Short vertical video up to 90 seconds. Location-tagged. Optimised for showing — not just telling. A plate of food, a street scene, a market moment, a sunset from a rooftop. Hapa Reels appear in a dedicated discovery feed sorted by proximity first, then engagement.</p>
+        <div class="examples">
+          <span class="example-pill">Street food being prepared at 5am at Owino</span>
+          <span class="example-pill">The view from Kampala's highest rooftop bar</span>
+          <span class="example-pill">Matatu conductor calling passengers in Nairobi</span>
+        </div>
+      </div>
+      <div class="ct-right">
+        <div class="ct-meta-item"><span class="ct-meta-label">Max length</span><span class="ct-meta-val">90 seconds</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Location tag</span><span class="ct-meta-val">Required</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Discovery</span><span class="ct-meta-val">Proximity-first algorithm</span></div>
+        <div class="ct-meta-item"><span class="ct-meta-label">Monetisable</span><span class="ct-meta-val">Yes — for creators</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHAPTER 5: ENGAGEMENT MECHANICS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="chapter" id="engagement">
+  <div class="chapter-header">
+    <div class="chapter-num">5</div>
+    <div>
+      <h2 class="chapter-title">Engagement<br><em>Mechanics</em></h2>
+      <p class="chapter-sub">Likes and comments are not enough. Every engagement mechanic on Hapa is designed to be location-meaningful — generating data that makes the recommendation engine smarter and rewarding users who contribute genuine local value.</p>
+    </div>
+  </div>
+
+  <div class="eng-grid">
+    <div class="eng-card">
+      <span class="eng-icon">📍</span>
+      <h4>Been Here</h4>
+      <p>Instead of liking a post about a place, users tap "Been Here" to confirm they visited. This is the most valuable signal on Hapa — it closes the loop between content and real-world action. 500 "Been Here" confirmations is evidence of real community impact that no follower count can match.</p>
+      <div class="eng-why">Feeds: recommendation engine, creator credibility score, business "verified popular" badge, Hapa Guide confirmation layer.</div>
+    </div>
+
+    <div class="eng-card">
+      <span class="eng-icon">🔥</span>
+      <h4>Hapa Pulse</h4>
+      <p>A reaction specifically for Hapa Flash content — "This is happening right now." When enough users Pulse the same Flash post, it gets elevated into a city-wide notification. Crowdsourced real-time intelligence that no editorial team could replicate.</p>
+      <div class="eng-why">Feeds: Hapa Now algorithm, city-wide notifications, trending local topics.</div>
+    </div>
+
+    <div class="eng-card">
+      <span class="eng-icon">💬</span>
+      <h4>Local Comments</h4>
+      <p>Comments on Hapa are location-contextualised. A comment from someone who lives in the same neighbourhood carries a "Local" badge. A comment from a verified local with high trust score carries a "Trusted Local" badge. Proximity adds credibility.</p>
+      <div class="eng-why">Feeds: trust scoring, community knowledge layer, search result weighting.</div>
+    </div>
+
+    <div class="eng-card">
+      <span class="eng-icon">⬆️</span>
+      <h4>Community Upvote</h4>
+      <p>Used specifically on Cultural Notes and Community Ask answers. Unlike a like, an upvote means: "This is accurate, I confirm this." Community upvotes surface the most trustworthy local knowledge to the top of Hapa Guide automatically.</p>
+      <div class="eng-why">Feeds: Hapa Guide content ranking, cultural intelligence accuracy layer, contributor reputation score.</div>
+    </div>
+
+    <div class="eng-card">
+      <span class="eng-icon">📌</span>
+      <h4>Save to City Map</h4>
+      <p>Users can save any place, post, or creator recommendation to their personal city map. When enough users save the same place, it surfaces as a "Community Favourite" in that neighbourhood. Collective curation without any editorial intervention.</p>
+      <div class="eng-why">Feeds: personal recommendation engine, neighbourhood trending places, Hapa Places ranking.</div>
+    </div>
+
+    <div class="eng-card">
+      <span class="eng-icon">🏆</span>
+      <h4>Local Reputation Score</h4>
+      <p>Every user builds a reputation score in each city they are active in. Scored on: review accuracy ("Been Here" confirmations on their recommendations), cultural note quality (upvotes), Community Ask answer helpfulness, and general content engagement. This score is public and city-specific.</p>
+      <div class="eng-why">Feeds: creator application eligibility, Verified Local status, content reach multiplier, business partnership eligibility.</div>
+    </div>
+
+    <div class="eng-card">
+      <span class="eng-icon">🎯</span>
+      <h4>City Challenges</h4>
+      <p>Weekly or monthly community challenges issued by Hapa or top creators. "Show us the best hidden spot in your neighbourhood." "Document the oldest business on your street." "Best street food under 2,000 UGX." A wave of coordinated local content that floods the platform with discovery.</p>
+      <div class="eng-why">Feeds: content volume, new user acquisition, creator visibility, cultural archive building.</div>
+    </div>
+
+    <div class="eng-card">
+      <span class="eng-icon">👥</span>
+      <h4>Hapa Circles</h4>
+      <p>Interest-based community groups anchored to a city or neighbourhood. "Nairobi Food Lovers." "Kampala Nightlife." "Lagos Tech Scene." Users join circles, post within them, and discover people with shared interests who are actually nearby. The WhatsApp group — but structured, searchable, and public by default.</p>
+      <div class="eng-why">Feeds: people discovery, social graph building, creator audience building, targeted business discovery.</div>
+    </div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">5.1 — Feed Algorithm Principles</div>
+  <div class="two-col">
+    <div class="spec-box">
+      <span class="spec-box-label">What the Feed Prioritises</span>
+      <div class="spec-list">
+        <div class="spec-item">Proximity — content from within your current location always ranks first</div>
+        <div class="spec-item">Recency — within proximity, newer content surfaces above older</div>
+        <div class="spec-item">Behavioural match — content types you engage with most appear more frequently</div>
+        <div class="spec-item">Social graph — content from people you follow and circles you're in</div>
+        <div class="spec-item">Verified local signal — content from users with high local reputation scores in your city</div>
+        <div class="spec-item">Time context — Friday evening feed looks different from Monday morning feed</div>
+      </div>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">What the Feed Never Does</span>
+      <div class="spec-list">
+        <div class="spec-item">Never shows content from another city without explicit user request</div>
+        <div class="spec-item">Never prioritises paid content above genuinely high-quality organic content</div>
+        <div class="spec-item">Never surfaces content with high global engagement but low local relevance</div>
+        <div class="spec-item">Never shows the same business promotion twice in the same 24-hour window</div>
+        <div class="spec-item">Never replaces location context with interest context — location is always the primary filter</div>
+        <div class="spec-item">Never rewards low-quality content simply because it generated high reaction volume</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHAPTER 6: CONTENT MODERATION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="chapter" id="moderation">
+  <div class="chapter-header">
+    <div class="chapter-num">6</div>
+    <div>
+      <h2 class="chapter-title">Content<br><em>Moderation</em></h2>
+      <p class="chapter-sub">Hapa is a platform rooted in real communities. Moderation must protect those communities without becoming a bureaucratic barrier to genuine local expression. The principle: fast, fair, and locally informed.</p>
+    </div>
+  </div>
+
+  <div class="principle">
+    <p>"Moderation on Hapa is not about policing content. It is about protecting the integrity of local knowledge. A false review harms a real business. A fabricated Flash post wastes real people's time. Trust is the product."</p>
+    <div class="attr">// Design Principle — Moderation</div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">6.1 — Moderation Framework</div>
+  <table class="mod-table">
+    <thead>
+      <tr>
+        <th>Violation Type</th>
+        <th>Detection Method</th>
+        <th>First Offence Action</th>
+        <th>Repeat Offence</th>
+        <th>Severity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>False location tag</td>
+        <td>GPS verification + community flag</td>
+        <td>Post removed, user warned</td>
+        <td>Review posting suspended 7 days</td>
+        <td><span class="severity sev-med">Medium</span></td>
+      </tr>
+      <tr>
+        <td>Fake business review</td>
+        <td>Location gate check + report</td>
+        <td>Review removed, reputation score docked</td>
+        <td>Review privilege removed 30 days</td>
+        <td><span class="severity sev-high">High</span></td>
+      </tr>
+      <tr>
+        <td>Spam / repeated promotion</td>
+        <td>Frequency algorithm + reports</td>
+        <td>Content suppressed from feed</td>
+        <td>Account restricted</td>
+        <td><span class="severity sev-med">Medium</span></td>
+      </tr>
+      <tr>
+        <td>Hate speech / harassment</td>
+        <td>AI classifier + human review</td>
+        <td>Content removed, 7-day suspension</td>
+        <td>Permanent ban</td>
+        <td><span class="severity sev-high">High</span></td>
+      </tr>
+      <tr>
+        <td>Misinformation (Flash posts)</td>
+        <td>Community contradiction flags</td>
+        <td>Post labelled "Unconfirmed", reach reduced</td>
+        <td>Flash privileges removed</td>
+        <td><span class="severity sev-med">Medium</span></td>
+      </tr>
+      <tr>
+        <td>Inaccurate cultural note</td>
+        <td>Community downvotes</td>
+        <td>Auto-deprioritised in Guide</td>
+        <td>No action — community self-corrects</td>
+        <td><span class="severity sev-low">Low</span></td>
+      </tr>
+      <tr>
+        <td>Creator paid-post without disclosure</td>
+        <td>Partnership Hub check + reports</td>
+        <td>Post labelled, creator warned</td>
+        <td>Creator tier downgrade</td>
+        <td><span class="severity sev-high">High</span></td>
+      </tr>
+      <tr>
+        <td>Inappropriate imagery</td>
+        <td>AI classifier (immediate)</td>
+        <td>Auto-removed before publish</td>
+        <td>Account reviewed + suspended</td>
+        <td><span class="severity sev-high">High</span></td>
+      </tr>
+      <tr>
+        <td>Business gaming reviews</td>
+        <td>Velocity detection + cluster analysis</td>
+        <td>Reviews voided, business warned</td>
+        <td>Business listing suspended</td>
+        <td><span class="severity sev-high">High</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">6.2 — Trust Architecture</div>
+  <div class="two-col">
+    <div class="spec-box">
+      <span class="spec-box-label">Community-First Moderation</span>
+      <div class="spec-list">
+        <div class="spec-item">Any user can flag content — one tap, reason selection from a list</div>
+        <div class="spec-item">Three independent flags from users in the same city triggers automatic review queue</div>
+        <div class="spec-item">Users who flag accurately (content is later removed) build a "trusted reporter" score that gives their future flags higher priority</div>
+        <div class="spec-item">Users who flag maliciously (repeatedly flagging valid content) lose flagging weight over time</div>
+        <div class="spec-item">City Voice creators have a fast-track channel for urgent moderation issues in their city</div>
+      </div>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Location Verification Layer</span>
+      <div class="spec-list">
+        <div class="spec-item">Reviews can only be posted by users whose GPS placed them within 500m of the business in the last 30 days</div>
+        <div class="spec-item">Flash posts are automatically labelled "Unverified" if the poster's location does not match the tagged location</div>
+        <div class="spec-item">Cultural notes are city-locked — a user who has never been to Nairobi cannot post cultural notes about Nairobi</div>
+        <div class="spec-item">Business location pins are cross-checked against known address databases where available</div>
+        <div class="spec-item">Verified Local status requires demonstrated location history in the claimed city over 60+ days</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHAPTER 7: NOTIFICATION SYSTEM -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="chapter" id="notifications">
+  <div class="chapter-header">
+    <div class="chapter-num">7</div>
+    <div>
+      <h2 class="chapter-title">Notification<br><em>System</em></h2>
+      <p class="chapter-sub">Notifications are Hapa's most powerful product surface. A well-timed, location-relevant push is the moment Hapa feels like magic. A poorly timed or irrelevant one is the moment users turn notifications off forever. Every notification must earn its place.</p>
+    </div>
+  </div>
+
+  <div class="principle">
+    <p>"Every notification Hapa sends should make the user think: how did it know? Not: why is it bothering me?"</p>
+    <div class="attr">// Design Principle — Notifications</div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">7.1 — Notification Types</div>
+  <div class="notif-list">
+
+    <div class="notif">
+      <span class="notif-icon">⚡</span>
+      <div class="notif-body">
+        <h5>Hapa Now Alert — Time-Sensitive Local Event</h5>
+        <p>Triggered when a Hapa Flash post reaches the "Pulse" threshold (multiple community confirmations) near the user's current location. Sent only during hours the user has been active before.</p>
+        <div class="sample">"Live music just started at Cayenne — 400m from you. 12 Hapa users there now."</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <span class="notif-icon">📍</span>
+      <div class="notif-body">
+        <h5>Predictive Discovery — Before You Ask</h5>
+        <p>The signature Hapa notification. Triggered by behavioural pattern matching. User searches for food every Friday evening — Hapa sends a relevant recommendation at 6:45pm Friday before they open the app.</p>
+        <div class="sample">"It's Friday evening. New rooftop bar opened in Lekki this week — 1.2km from you. Rated 4.8 by 23 locals."</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <span class="notif-icon">🏪</span>
+      <div class="notif-body">
+        <h5>Hapa Boost — Business Promotion (Proximity-Triggered)</h5>
+        <p>Sent when a registered business pushes a Hapa Boost promotion and the user is within the defined radius. Only sent once per business per day. Never more than three promotional notifications per user per day total.</p>
+        <div class="sample">"Kati Kati Kitchen — 300m away: Buy 1 get 1 free on lunch today, next 2 hours only."</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <span class="notif-icon">🌍</span>
+      <div class="notif-body">
+        <h5>Location Change — City Switch Detected</h5>
+        <p>When Hapa detects the user has moved to a new city (sustained GPS data, not a brief transit). Triggers the arrival experience: cultural briefing, nearby recommendations, local creator introductions.</p>
+        <div class="sample">"You're in Nairobi. Here's what you need to know today — and what's happening tonight."</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <span class="notif-icon">🎙️</span>
+      <div class="notif-body">
+        <h5>Creator Activity — Local Creator You Follow</h5>
+        <p>When a creator the user follows posts a Neighbourhood Diary, Curated Map, or Hapa Reel in the user's current city. Frequency-capped to prevent creator over-notification.</p>
+        <div class="sample">"[Creator Name] just posted a new guide to Kabalagala nightlife — 3 spots you haven't tried."</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <span class="notif-icon">❓</span>
+      <div class="notif-body">
+        <h5>Community Ask — Answer Request Near You</h5>
+        <p>When a Community Ask question is posted in the user's neighbourhood and their interests or local reputation score makes them a likely good answer. Opt-in only — users choose whether to receive these.</p>
+        <div class="sample">"Someone in Kololo needs a mechanic recommendation. You've reviewed 3 mechanics nearby — can you help?"</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <span class="notif-icon">🏆</span>
+      <div class="notif-body">
+        <h5>Reputation Milestone</h5>
+        <p>When a user's local reputation score crosses a new tier, a "Been Here" confirmation validates their recommendation, or their cultural note is featured in Hapa Guide. Celebrates contribution without being patronising.</p>
+        <div class="sample">"Your review of Nalongo's Kitchen just got 50 'Been Here' confirmations. You're Kampala's top-rated food reviewer this month."</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">7.2 — Notification Rules</div>
+  <div class="spec-box">
+    <span class="spec-box-label">Hard Limits — Non-Negotiable</span>
+    <div class="spec-list">
+      <div class="spec-item">Maximum 5 push notifications per user per day — total across all types</div>
+      <div class="spec-item">Maximum 1 promotional (Hapa Boost) notification per user per 4 hours</div>
+      <div class="spec-item">No notifications between 10pm and 7am local time — except user-opted emergency alerts</div>
+      <div class="spec-item">No notifications for a city the user has not been in for 7+ days (prevents Kampala notifications reaching a user now in Nairobi)</div>
+      <div class="spec-item">Notification frequency auto-reduces for users who consistently dismiss without opening — Hapa learns their tolerance</div>
+      <div class="spec-item">One-tap notification management — users can silence any category from the notification itself, without going into settings</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHAPTER 8: PRIVACY ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section class="chapter" id="privacy">
+  <div class="chapter-header">
+    <div class="chapter-num">8</div>
+    <div>
+      <h2 class="chapter-title">Privacy<br><em>Architecture</em></h2>
+      <p class="chapter-sub">Location is Hapa's most powerful asset — and its most sensitive one. Privacy architecture is not a legal obligation. It is a product decision that determines whether users trust Hapa enough to keep location on. Without that trust, there is no product.</p>
+    </div>
+  </div>
+
+  <div class="principle">
+    <p>"Hapa knows where you are to serve you — never to watch you. The moment users feel surveilled rather than served, the product fails."</p>
+    <div class="attr">// Design Principle — Privacy</div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">8.1 — Location Data Principles</div>
+  <div class="privacy-grid">
+    <div class="privacy-card">
+      <h4>What Hapa Collects</h4>
+      <ul>
+        <li>Current city — for feed and recommendations</li>
+        <li>Precise location — only when app is open and active</li>
+        <li>Location history — anonymised, stored for 90 days for behaviour patterns</li>
+        <li>Places visited — inferred from GPS proximity to registered businesses</li>
+        <li>Movement patterns — time-of-day and day-of-week aggregates only</li>
+      </ul>
+    </div>
+    <div class="privacy-card">
+      <h4>What Hapa Never Does</h4>
+      <ul>
+        <li>Never tracks location when app is closed (background location off by default)</li>
+        <li>Never shares precise location with other users — only city/neighbourhood level</li>
+        <li>Never sells location data to third parties</li>
+        <li>Never shows other users your real-time location without explicit opt-in</li>
+        <li>Never uses location data for purposes unrelated to the Hapa experience</li>
+      </ul>
+    </div>
+    <div class="privacy-card">
+      <h4>User Controls</h4>
+      <ul>
+        <li>Ghost Mode — use Hapa without broadcasting any location signals to other users</li>
+        <li>Neighbourhood-only — show neighbourhood but not precise area to other users</li>
+        <li>Location history — view and delete your full location history at any time</li>
+        <li>Data export — download your full Hapa data at any time</li>
+        <li>Account deletion — full data purge within 30 days of request</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec-divider"></div>
+
+  <div class="sec-label">8.2 — Social Privacy Modes</div>
+  <div class="two-col-3">
+    <div class="spec-box">
+      <span class="spec-box-label">Discoverable (Default)</span>
+      <div class="spec-list">
+        <div class="spec-item">Profile visible in People discovery</div>
+        <div class="spec-item">City and neighbourhood shown</div>
+        <div class="spec-item">Posts visible to city feed</div>
+        <div class="spec-item">Can receive connection requests</div>
+        <div class="spec-item">Appears in creator follower lists</div>
+      </div>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Visible (Reduced)</span>
+      <div class="spec-list">
+        <div class="spec-item">Profile visible only to followers</div>
+        <div class="spec-item">City shown, neighbourhood hidden</div>
+        <div class="spec-item">Posts visible to followers only</div>
+        <div class="spec-item">Connection requests require approval</div>
+        <div class="spec-item">Discoverable only to mutual connections</div>
+      </div>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Ghost Mode</span>
+      <div class="spec-list">
+        <div class="spec-item">Profile not discoverable</div>
+        <div class="spec-item">Location signals hidden entirely</div>
+        <div class="spec-item">Posts visible only to approved followers</div>
+        <div class="spec-item">Still receives full recommendations</div>
+        <div class="spec-item">Full Hapa experience — invisible presence</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</div><!-- /page -->
+
+<footer>
+  <div>
+    <div class="footer-logo">Hapa</div>
+    <div style="font-family:'JetBrains Mono',monospace; font-size:0.58rem; color:var(--muted); margin-top:0.4rem; letter-spacing:0.1em;">Feature Specification — Version 1.0</div>
+  </div>
+  <div class="footer-info">
+    <div>8 Feature Areas · User · Business · Creator · Content · Engagement · Moderation · Notifications · Privacy</div>
+    <div style="margin-top:0.3rem; opacity:0.5;">hapa.world · 2026 · Moves Before You Move</div>
+  </div>
+</footer>
+
+</body>
+</html>

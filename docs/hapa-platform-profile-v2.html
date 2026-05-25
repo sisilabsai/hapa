@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hapa — Platform Profile & Building Manifesto v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ochre: #C8853A;
+    --deep: #1A1208;
+    --cream: #F5EFE0;
+    --rust: #9B3A1A;
+    --sage: #4A6741;
+    --sand: #E8D5A3;
+    --warm-white: #FAF7F0;
+    --charcoal: #2C2418;
+    --gold: #D4A847;
+    --muted: #8B7355;
+    --accent-green: #5C8A52;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--deep);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 3rem;
+    background: rgba(26,18,8,0.94);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(200,133,58,0.18);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; font-weight: 900;
+    color: var(--ochre); letter-spacing: -0.02em;
+  }
+  .nav-version {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem; color: var(--muted);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin-left: 0.6rem; vertical-align: super;
+  }
+  .nav-links { display: flex; gap: 1.8rem; list-style: none; }
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem; color: var(--muted);
+    text-decoration: none; letter-spacing: 0.12em;
+    text-transform: uppercase; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--ochre); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 8rem 2rem 6rem;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 40%, rgba(200,133,58,0.13) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 20% 80%, rgba(155,58,26,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 30% 30% at 80% 20%, rgba(74,103,65,0.06) 0%, transparent 50%);
+  }
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.3em; color: var(--ochre); text-transform: uppercase;
+    margin-bottom: 2rem; opacity: 0; animation: fadeUp 0.8s 0.2s forwards;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(5rem, 13vw, 11rem);
+    font-weight: 900; line-height: 0.88; letter-spacing: -0.04em;
+    color: var(--cream); margin-bottom: 0.4rem;
+    opacity: 0; animation: fadeUp 0.8s 0.4s forwards;
+  }
+  .hero-title span { color: var(--ochre); font-style: italic; }
+  .hero-sub {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: clamp(1.1rem, 2.5vw, 1.7rem); color: var(--sand);
+    margin: 1.8rem 0 1rem; opacity: 0; animation: fadeUp 0.8s 0.6s forwards;
+  }
+  .hero-sub2 {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: clamp(0.95rem, 2vw, 1.25rem); color: var(--muted);
+    margin-bottom: 3rem; opacity: 0; animation: fadeUp 0.8s 0.7s forwards;
+  }
+  .hero-divider {
+    width: 60px; height: 1px; background: var(--ochre);
+    margin: 0.5rem auto 2rem; opacity: 0; animation: fadeUp 0.8s 0.9s forwards;
+  }
+  .hero-tagline {
+    font-family: 'Space Mono', monospace; font-size: 0.72rem;
+    letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;
+    opacity: 0; animation: fadeUp 0.8s 1s forwards;
+  }
+  .hero-scroll {
+    position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    font-family: 'Space Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    opacity: 0; animation: fadeUp 0.8s 1.4s forwards;
+  }
+  .hero-scroll::after {
+    content: ''; width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--ochre), transparent);
+    animation: scrollLine 2s infinite;
+  }
+
+  /* LAYOUT */
+  section { padding: 7rem 0; position: relative; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+  .section-label {
+    font-family: 'Space Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.3em; color: var(--ochre); text-transform: uppercase;
+    margin-bottom: 1.2rem; display: flex; align-items: center; gap: 1rem;
+  }
+  .section-label::before { content: ''; width: 28px; height: 1px; background: var(--ochre); }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 700; line-height: 1.1; color: var(--cream); margin-bottom: 1.5rem;
+  }
+  .section-title em { color: var(--ochre); font-style: italic; }
+
+  .body-text {
+    font-size: 1.02rem; line-height: 1.88; color: var(--sand); max-width: 680px;
+  }
+
+  hr.rule { border: none; height: 1px; background: rgba(200,133,58,0.1); margin: 0; }
+
+  /* MANIFESTO */
+  .manifesto { background: var(--charcoal); border-top: 1px solid rgba(200,133,58,0.12); border-bottom: 1px solid rgba(200,133,58,0.12); }
+  .manifesto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .manifesto-left { padding: 5rem 4rem 5rem 0; border-right: 1px solid rgba(200,133,58,0.12); }
+  .manifesto-right { padding: 5rem 0 5rem 4rem; }
+  .manifesto-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.3rem, 2.5vw, 1.9rem); font-style: italic;
+    line-height: 1.5; color: var(--cream); margin-bottom: 2rem;
+    padding-left: 2rem; border-left: 3px solid var(--ochre);
+  }
+  .beliefs { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem; }
+  .belief { display: flex; gap: 1.2rem; align-items: flex-start; }
+  .belief-num { font-family: 'Space Mono', monospace; font-size: 0.62rem; color: var(--ochre); padding-top: 0.3rem; min-width: 26px; }
+  .belief-content h4 { font-weight: 600; font-size: 0.93rem; color: var(--cream); margin-bottom: 0.3rem; }
+  .belief-content p { font-size: 0.86rem; color: var(--muted); line-height: 1.65; }
+
+  /* CORE IDEA — the one line */
+  .core-idea {
+    padding: 6rem 0; text-align: center;
+    background: linear-gradient(to bottom, var(--deep), rgba(44,36,24,0.4), var(--deep));
+  }
+  .core-idea-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4.5vw, 3.2rem);
+    font-style: italic; line-height: 1.35; color: var(--cream);
+    max-width: 820px; margin: 0 auto;
+  }
+  .core-idea-text strong { color: var(--ochre); font-style: normal; font-weight: 900; }
+
+  /* TWO WORLDS */
+  .two-worlds { background: var(--charcoal); }
+  .worlds-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 3.5rem; }
+  .world {
+    padding: 3rem;
+    border: 1px solid rgba(200,133,58,0.1);
+    transition: background 0.3s;
+  }
+  .world:hover { background: rgba(200,133,58,0.04); }
+  .world-tag {
+    font-family: 'Space Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.2em; color: var(--ochre); text-transform: uppercase;
+    margin-bottom: 1rem; display: block;
+  }
+  .world h3 {
+    font-family: 'Playfair Display', serif; font-size: 1.6rem;
+    color: var(--cream); margin-bottom: 1rem;
+  }
+  .world p { font-size: 0.9rem; color: var(--sand); line-height: 1.75; margin-bottom: 1.2rem; }
+  .world-signals {
+    display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1.5rem;
+  }
+  .signal {
+    font-family: 'Space Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.08em; color: var(--muted);
+    border: 1px solid rgba(200,133,58,0.18); padding: 0.3rem 0.7rem;
+  }
+  .world-join {
+    padding: 2.5rem 3rem; background: rgba(200,133,58,0.06);
+    border: 1px solid rgba(200,133,58,0.15); border-top: none;
+    grid-column: 1 / -1;
+  }
+  .world-join p {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: 1.15rem; color: var(--sand); text-align: center; line-height: 1.6;
+  }
+  .world-join span { color: var(--ochre); }
+
+  /* PRODUCT MODULES */
+  .modules-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: rgba(200,133,58,0.08);
+    border: 1px solid rgba(200,133,58,0.08); margin-top: 4rem;
+  }
+  .module { background: var(--deep); padding: 2.5rem 2rem; transition: background 0.3s; }
+  .module:hover { background: rgba(200,133,58,0.05); }
+  .module-icon { font-size: 1.8rem; margin-bottom: 1.2rem; display: block; }
+  .module h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--ochre); margin-bottom: 0.7rem; }
+  .module p { font-size: 0.86rem; color: var(--muted); line-height: 1.72; }
+  .module-tag {
+    font-family: 'Space Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.15em; color: rgba(200,133,58,0.4); text-transform: uppercase;
+    margin-bottom: 0.5rem; display: block;
+  }
+
+  /* INTELLIGENCE ENGINE */
+  .intel { background: var(--charcoal); }
+  .intel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 3rem; }
+  .intel-visual {
+    border: 1px solid rgba(200,133,58,0.15);
+    padding: 2.5rem;
+    position: relative;
+  }
+  .intel-visual h4 {
+    font-family: 'Space Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.2em; color: var(--ochre); text-transform: uppercase; margin-bottom: 2rem;
+  }
+  .signal-stack { display: flex; flex-direction: column; gap: 0.9rem; }
+  .signal-row { display: flex; align-items: center; gap: 1rem; }
+  .signal-bar-wrap { flex: 1; height: 4px; background: rgba(200,133,58,0.1); }
+  .signal-bar { height: 100%; background: linear-gradient(to right, var(--ochre), var(--rust)); }
+  .signal-name { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: var(--muted); min-width: 120px; }
+  .signal-pct { font-family: 'Space Mono', monospace; font-size: 0.58rem; color: var(--ochre); min-width: 32px; text-align: right; }
+  .intel-arrow {
+    text-align: center; font-size: 1.5rem; margin: 1.5rem 0;
+    color: var(--ochre); opacity: 0.5;
+  }
+  .intel-output {
+    border: 1px solid rgba(200,133,58,0.25);
+    padding: 1.2rem 1.5rem;
+    background: rgba(200,133,58,0.04);
+    font-size: 0.88rem; color: var(--cream); line-height: 1.6;
+  }
+  .intel-output span { color: var(--ochre); }
+
+  /* CREATOR */
+  .creator-split { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 4rem; }
+  .creator-left { padding: 3rem 3rem 3rem 0; border-right: 1px solid rgba(200,133,58,0.12); }
+  .creator-right { padding: 3rem 0 3rem 3rem; }
+  .creator-stat { margin-bottom: 2rem; }
+  .creator-stat .num {
+    font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 900;
+    color: var(--ochre); display: block; line-height: 1; margin-bottom: 0.3rem;
+  }
+  .creator-stat .label {
+    font-family: 'Space Mono', monospace; font-size: 0.6rem;
+    color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.5;
+  }
+  .creator-points { display: flex; flex-direction: column; gap: 1.2rem; }
+  .creator-point { display: flex; gap: 1rem; align-items: flex-start; }
+  .cp-icon { font-size: 1.1rem; padding-top: 0.1rem; }
+  .cp-content h4 { font-weight: 600; font-size: 0.9rem; color: var(--cream); margin-bottom: 0.25rem; }
+  .cp-content p { font-size: 0.84rem; color: var(--muted); line-height: 1.65; }
+
+  /* MARKET */
+  .market-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: rgba(200,133,58,0.1); margin: 4rem 0 2rem;
+  }
+  .stat-box { background: var(--charcoal); padding: 2.5rem 1.5rem; text-align: center; }
+  .stat-num {
+    font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 900;
+    color: var(--ochre); display: block; line-height: 1; margin-bottom: 0.4rem;
+  }
+  .stat-label {
+    font-family: 'Space Mono', monospace; font-size: 0.58rem;
+    color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.55;
+  }
+
+  /* MARKET POOLS */
+  .market-pools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; }
+  .pool {
+    border: 1px solid rgba(200,133,58,0.12); padding: 2rem;
+    position: relative; overflow: hidden;
+  }
+  .pool::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(to right, var(--ochre), transparent);
+  }
+  .pool .pool-tag {
+    font-family: 'Space Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.15em; color: var(--ochre); text-transform: uppercase; margin-bottom: 0.8rem;
+  }
+  .pool .pool-size {
+    font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: var(--cream); margin-bottom: 0.4rem;
+  }
+  .pool p { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+  /* USER JOURNEY — DUAL */
+  .journey-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 4rem; }
+  .journey-col h4 {
+    font-family: 'Space Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.2em; color: var(--ochre); text-transform: uppercase;
+    margin-bottom: 2rem; padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(200,133,58,0.15);
+  }
+  .j-steps { display: flex; flex-direction: column; gap: 0; }
+  .j-step {
+    display: flex; gap: 1.2rem; padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .j-step:last-child { border-bottom: none; }
+  .j-dot {
+    width: 2.4rem; height: 2.4rem; border-radius: 50%;
+    background: var(--deep); border: 1px solid rgba(200,133,58,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; flex-shrink: 0; margin-top: 0.1rem;
+  }
+  .j-text h5 { font-weight: 600; font-size: 0.88rem; color: var(--cream); margin-bottom: 0.3rem; }
+  .j-text p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+  /* BUSINESS MODEL */
+  .revenue-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 4rem; }
+  .revenue-card {
+    border: 1px solid rgba(200,133,58,0.13); padding: 2.5rem;
+    position: relative; overflow: hidden; transition: border-color 0.3s;
+  }
+  .revenue-card:hover { border-color: rgba(200,133,58,0.35); }
+  .revenue-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(to right, var(--ochre), var(--rust));
+  }
+  .revenue-card .tag {
+    font-family: 'Space Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.2em; color: var(--ochre); text-transform: uppercase; margin-bottom: 1rem;
+  }
+  .revenue-card h3 { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: var(--cream); margin-bottom: 0.7rem; }
+  .revenue-card p { font-size: 0.86rem; color: var(--muted); line-height: 1.72; margin-bottom: 1.2rem; }
+  .revenue-card .amount {
+    font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--gold);
+    background: rgba(212,168,71,0.07); padding: 0.4rem 0.8rem; display: inline-block;
+  }
+
+  /* VS TABLE */
+  .comp-table { width: 100%; border-collapse: collapse; margin-top: 3rem; font-size: 0.87rem; }
+  .comp-table th {
+    font-family: 'Space Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--ochre);
+    padding: 1rem 1.4rem; text-align: left; border-bottom: 1px solid rgba(200,133,58,0.18);
+  }
+  .comp-table td { padding: 1rem 1.4rem; color: var(--sand); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .comp-table tr.hapa-row td { background: rgba(200,133,58,0.06); color: var(--cream); }
+  .comp-table tr.hapa-row td:first-child { color: var(--ochre); font-weight: 600; font-family: 'Playfair Display', serif; font-size: 1rem; }
+  .check { color: var(--accent-green); } .cross { color: var(--rust); opacity: 0.55; } .partial { color: var(--gold); }
+
+  /* MOAT */
+  .moat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 3.5rem; }
+  .moat-card { padding: 2rem 2rem; border: 1px solid rgba(200,133,58,0.12); }
+  .moat-card h3 { font-family: 'Playfair Display', serif; color: var(--ochre); margin-bottom: 0.8rem; font-size: 1.15rem; }
+  .moat-card p { font-size: 0.86rem; color: var(--muted); line-height: 1.72; }
+  .moat-wide { grid-column: 1 / -1; }
+
+  /* GO TO MARKET */
+  .phase { display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid rgba(200,133,58,0.1); }
+  .phase:last-child { border-bottom: none; }
+  .phase-label { padding: 2.5rem 2rem 2.5rem 0; border-right: 1px solid rgba(200,133,58,0.12); }
+  .phase-label .pnum { font-family: 'Space Mono', monospace; font-size: 0.58rem; color: var(--ochre); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .phase-label h4 { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--cream); }
+  .phase-label .timeline { font-family: 'Space Mono', monospace; font-size: 0.62rem; color: var(--muted); margin-top: 0.4rem; }
+  .phase-content { padding: 2.5rem 0 2.5rem 2.5rem; }
+  .phase-content p { font-size: 0.88rem; color: var(--sand); line-height: 1.78; margin-bottom: 1rem; }
+  .phase-items { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .phase-item { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.07em; color: var(--muted); border: 1px solid rgba(200,133,58,0.18); padding: 0.28rem 0.75rem; }
+
+  /* VISION */
+  .vision { background: var(--ochre); color: var(--deep); text-align: center; padding: 9rem 2rem; }
+  .vision .section-label { color: rgba(26,18,8,0.45); justify-content: center; }
+  .vision .section-label::before { background: rgba(26,18,8,0.3); }
+  .vision .section-title { color: var(--deep); max-width: 820px; margin: 0 auto 2rem; }
+  .vision-statement {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: clamp(1.2rem, 2.8vw, 1.85rem); line-height: 1.65;
+    color: rgba(26,18,8,0.75); max-width: 720px; margin: 0 auto;
+  }
+
+  /* CLOSING */
+  .closing { padding: 8rem 0; text-align: center; }
+  .closing .section-title { max-width: 680px; margin: 0 auto 2rem; }
+  .cta-block { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 3rem; }
+  .cta-primary {
+    font-family: 'Space Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    background: var(--ochre); color: var(--deep);
+    padding: 1rem 2.5rem; border: none; cursor: pointer;
+    text-decoration: none; display: inline-block; transition: background 0.2s; font-weight: 700;
+  }
+  .cta-primary:hover { background: var(--gold); }
+  .cta-secondary {
+    font-family: 'Space Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    border: 1px solid rgba(200,133,58,0.35); color: var(--ochre);
+    padding: 1rem 2.5rem; background: none; cursor: pointer;
+    text-decoration: none; display: inline-block; transition: all 0.2s;
+  }
+  .cta-secondary:hover { background: rgba(200,133,58,0.07); border-color: var(--ochre); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid rgba(200,133,58,0.1); padding: 3rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 900; color: var(--ochre); }
+  .footer-copy { font-family: 'Space Mono', monospace; font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em; text-align: right; }
+
+  /* BIG QUOTE */
+  .big-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 4vw, 2.8rem); font-style: italic;
+    line-height: 1.4; color: var(--cream); padding: 5rem 0;
+    text-align: center; max-width: 820px; margin: 0 auto;
+    border-top: 1px solid rgba(200,133,58,0.1);
+    border-bottom: 1px solid rgba(200,133,58,0.1);
+  }
+  .big-quote span { color: var(--ochre); }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes scrollLine { 0%,100%{opacity:0;transform:scaleY(0);transform-origin:top} 50%{opacity:1;transform:scaleY(1)} }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .manifesto-grid, .worlds-grid, .creator-split, .intel-grid, .journey-dual, .revenue-grid, .moat-grid, .market-pools { grid-template-columns: 1fr; }
+    .manifesto-left { padding: 3rem 0; border-right: none; border-bottom: 1px solid rgba(200,133,58,0.12); }
+    .manifesto-right { padding: 3rem 0; }
+    .creator-left { padding: 3rem 0; border-right: none; border-bottom: 1px solid rgba(200,133,58,0.12); }
+    .creator-right { padding: 3rem 0; }
+    .modules-grid { grid-template-columns: 1fr; }
+    .market-stats { grid-template-columns: repeat(2,1fr); }
+    .phase { grid-template-columns: 1fr; }
+    .phase-label { border-right: none; border-bottom: 1px solid rgba(200,133,58,0.1); padding: 2rem 0 1rem; }
+    .phase-content { padding: 1.5rem 0 2rem; }
+    footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+    .footer-copy { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div>
+    <span class="nav-logo">Hapa</span>
+    <span class="nav-version">v2</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#manifesto">Manifesto</a></li>
+    <li><a href="#scope">Scope</a></li>
+    <li><a href="#product">Product</a></li>
+    <li><a href="#intelligence">Intelligence</a></li>
+    <li><a href="#creators">Creators</a></li>
+    <li><a href="#market">Market</a></li>
+    <li><a href="#model">Business</a></li>
+    <li><a href="#gtm">Strategy</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <p class="hero-eyebrow">Platform Profile & Building Manifesto — 2026</p>
+  <h1 class="hero-title">Ha<span>pa</span></h1>
+  <p class="hero-sub">Moves before you move.</p>
+  <p class="hero-sub2">Your city. Your people. Your life — intelligently.</p>
+  <div class="hero-divider"></div>
+  <p class="hero-tagline">The world's first location-intelligent life platform</p>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto" id="manifesto">
+  <div class="container">
+    <div class="manifesto-grid">
+      <div class="manifesto-left">
+        <div class="section-label">Our Manifesto</div>
+        <h2 class="section-title">We believe your city should <em>know you.</em></h2>
+        <div class="manifesto-quote">
+          "Every platform in the world knows your age, your interests, who you follow. None of them know where you actually are right now — and what that means for what you need next. Hapa is built on one truth: location is the most honest signal a person can give. And we built everything around it."
+        </div>
+        <p class="body-text">Whether you have lived in Kampala for ten years or landed ten minutes ago — Hapa shows up. It knows your patterns. It anticipates your needs. It connects you to the people, places, and moments that exist in your world right now. Not a search engine. Not a social feed. A companion.</p>
+      </div>
+      <div class="manifesto-right">
+        <div class="section-label">What We Believe</div>
+        <div class="beliefs">
+          <div class="belief">
+            <span class="belief-num">01</span>
+            <div class="belief-content">
+              <h4>Location is the most honest context</h4>
+              <p>Where you are right now tells us more about what you need than any interest graph or behavioural algorithm ever could.</p>
+            </div>
+          </div>
+          <div class="belief">
+            <span class="belief-num">02</span>
+            <div class="belief-content">
+              <h4>Daily life, not just travel, is where value lives</h4>
+              <p>A traveller uses a platform six times a year. A resident uses it every day. Retention, revenue, and network effects live in the everyday — not the journey.</p>
+            </div>
+          </div>
+          <div class="belief">
+            <span class="belief-num">03</span>
+            <div class="belief-content">
+              <h4>Culture cannot be Googled</h4>
+              <p>The slangs, the greetings, the unwritten rules — that knowledge lives with people. Hapa is where locals share it and everyone receives it.</p>
+            </div>
+          </div>
+          <div class="belief">
+            <span class="belief-num">04</span>
+            <div class="belief-content">
+              <h4>Creators deserve local audiences, not just global ones</h4>
+              <p>A food creator in Lagos should build an audience that actually visits the places they recommend. That loop doesn't close anywhere today. It closes on Hapa.</p>
+            </div>
+          </div>
+          <div class="belief">
+            <span class="belief-num">05</span>
+            <div class="belief-content">
+              <h4>Businesses deserve to be found, not just advertised</h4>
+              <p>A restaurant in Gulu shouldn't pay to interrupt someone. They should pay to be the right answer when someone nearby is hungry right now.</p>
+            </div>
+          </div>
+          <div class="belief">
+            <span class="belief-num">06</span>
+            <div class="belief-content">
+              <h4>Africa is not a market — it is the frontier</h4>
+              <p>1.5 billion people. Hundreds of cultures. Mobile-first. Underserved by every platform built in Silicon Valley. Hapa is built for here first.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CORE IDEA -->
+<section class="core-idea">
+  <div class="container">
+    <p class="core-idea-text">
+      Hapa is not a travel app. It is not a social network. It is not a local directory.<br>
+      It is a <strong>location-intelligent life platform</strong> — the first platform that knows where you were, where you are, and what you need next. Whether you have lived here for a decade or arrived an hour ago.
+    </p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- TWO WORLDS, ONE PRODUCT -->
+<section class="two-worlds" id="scope">
+  <div class="container">
+    <div class="section-label">The Full Scope</div>
+    <h2 class="section-title">Two worlds.<br><em>One intelligence.</em></h2>
+    <p class="body-text">Hapa serves every user in every moment — the resident who has never left their city, and the traveller who just landed in it. The engine is the same. The signal changes. The experience adapts.</p>
+
+    <div class="worlds-grid">
+      <div class="world">
+        <span class="world-tag">World 01 — The Resident</span>
+        <h3>You live here.<br>Hapa knows that.</h3>
+        <p>A Lagos resident opens Hapa on a Tuesday evening. They don't need orientation — they need relevance. What's trending in their neighbourhood. The new spot that opened nearby. Which creator in their city just recommended something they'd love. What's happening this weekend within walking distance.</p>
+        <p>Hapa learns their patterns. 7pm on Fridays they search for somewhere to eat. They engage with Afrobeats content. They follow three fashion creators who are all Lagos-based. Before they even open the app on Friday evening — Hapa already knows what to show them.</p>
+        <div class="world-signals">
+          <span class="signal">Daily habit use</span>
+          <span class="signal">Behaviour learning</span>
+          <span class="signal">Local creator feed</span>
+          <span class="signal">Neighbourhood pulse</span>
+          <span class="signal">Predictive discovery</span>
+          <span class="signal">Friend circles nearby</span>
+        </div>
+      </div>
+      <div class="world">
+        <span class="world-tag">World 02 — The Traveller</span>
+        <h3>You just arrived.<br>Hapa moves first.</h3>
+        <p>Someone flies from New York to Nairobi. The moment they land, the feed flips. Hapa doesn't wait for them to search — it surfaces what they need. Cultural briefing. Hotel recommendations within budget. What's happening tonight. Three locals who share their interests. The one thing every visitor gets wrong in this city.</p>
+        <p>Their New York behaviour is the baseline. Their Nairobi location is the context. Hapa bridges the gap between what they know and where they are — in seconds, not days.</p>
+        <div class="world-signals">
+          <span class="signal">Instant context switch</span>
+          <span class="signal">Cultural intelligence</span>
+          <span class="signal">Survival layer</span>
+          <span class="signal">In-app booking</span>
+          <span class="signal">Local people discovery</span>
+          <span class="signal">AI companion</span>
+        </div>
+      </div>
+      <div class="world-join">
+        <p>The traveller and the resident are <span>the same user at different moments in life.</span> The same product serves both — because the product is simply this: Hapa knows where you are, and everything it shows you lives in that context.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- PRODUCT -->
+<section id="product">
+  <div class="container">
+    <div class="section-label">The Product</div>
+    <h2 class="section-title">Seven modules.<br>One <em>living platform.</em></h2>
+    <p class="body-text">Every module is powered by a single engine: your real-time location and your behaviour within it. They talk to each other. They compound. The more you use Hapa, the more precisely it serves you.</p>
+
+    <div class="modules-grid">
+      <div class="module">
+        <span class="module-tag">Discovery</span>
+        <span class="module-icon">⚡</span>
+        <h3>Hapa Now</h3>
+        <p>What's happening right now, right here. Events, local energy, community posts, neighbourhood alerts — filtered entirely to your current location. Leave Kampala for Soroti and the feed flips instantly. No lag. No stale content.</p>
+      </div>
+      <div class="module">
+        <span class="module-tag">Intelligence</span>
+        <span class="module-icon">🧠</span>
+        <h3>Hapa Knows You</h3>
+        <p>The recommendation engine. Learns your behaviour by location and time. A Lagos user who searches for restaurants every Friday at 7pm gets suggestions before they ask. A frequent traveller gets a city briefing before they land. Hapa moves before you move.</p>
+      </div>
+      <div class="module">
+        <span class="module-tag">Culture</span>
+        <span class="module-icon">🧭</span>
+        <h3>Hapa Guide</h3>
+        <p>Cultural intelligence at the point of arrival. Local slangs, greetings, unwritten rules, what never to do. Contributed by locals, verified by community, updated continuously. Moving from USA to Kenya? Here is what you actually need today.</p>
+      </div>
+      <div class="module">
+        <span class="module-tag">Social</span>
+        <span class="module-icon">🤝</span>
+        <h3>Hapa People</h3>
+        <p>Find your people nearby — whether you just arrived or have lived here for years. Locals, fellow travellers, interest-based circles. Built around genuine proximity and shared context, not follower counts or algorithmic strangers.</p>
+      </div>
+      <div class="module">
+        <span class="module-tag">Commerce</span>
+        <span class="module-icon">📍</span>
+        <h3>Hapa Places</h3>
+        <p>Every registered business in your location. Hotels, restaurants, transport, markets, services — with live pricing, availability, and in-app booking. The AI closes the transaction without you leaving the app.</p>
+      </div>
+      <div class="module">
+        <span class="module-tag">Creators</span>
+        <span class="module-icon">🎙️</span>
+        <h3>Hapa Voices</h3>
+        <p>The local creator layer. Creators build audiences within their city. Followers who actually show up at the restaurants they recommend, the events they promote, the spots they discover. Creator-to-commerce, completed locally for the first time.</p>
+      </div>
+      <div class="module">
+        <span class="module-tag">Business</span>
+        <span class="module-icon">🏪</span>
+        <h3>Hapa Business</h3>
+        <p>Where owners register, manage their presence, and push hyper-local promotions to people within walking distance, right now. Not an ad. An answer to a question someone nearby is already asking.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- INTELLIGENCE ENGINE -->
+<section class="intel" id="intelligence">
+  <div class="container">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">The intelligence engine<br>that makes Hapa <em>move first.</em></h2>
+    <p class="body-text">Hapa's recommendation engine combines four data signals that no other platform holds simultaneously. The result is a platform that knows what you need before you do — and gets sharper every day you use it.</p>
+
+    <div class="intel-grid">
+      <div>
+        <div class="intel-visual">
+          <h4>Signal Weight — Example: Lagos User, Friday 6:45pm</h4>
+          <div class="signal-stack">
+            <div class="signal-row">
+              <span class="signal-name">Current location</span>
+              <div class="signal-bar-wrap"><div class="signal-bar" style="width:95%"></div></div>
+              <span class="signal-pct">95%</span>
+            </div>
+            <div class="signal-row">
+              <span class="signal-name">Time + day pattern</span>
+              <div class="signal-bar-wrap"><div class="signal-bar" style="width:82%"></div></div>
+              <span class="signal-pct">82%</span>
+            </div>
+            <div class="signal-row">
+              <span class="signal-name">Content interactions</span>
+              <div class="signal-bar-wrap"><div class="signal-bar" style="width:74%"></div></div>
+              <span class="signal-pct">74%</span>
+            </div>
+            <div class="signal-row">
+              <span class="signal-name">Creator follows</span>
+              <div class="signal-bar-wrap"><div class="signal-bar" style="width:68%"></div></div>
+              <span class="signal-pct">68%</span>
+            </div>
+            <div class="signal-row">
+              <span class="signal-name">Past places visited</span>
+              <div class="signal-bar-wrap"><div class="signal-bar" style="width:61%"></div></div>
+              <span class="signal-pct">61%</span>
+            </div>
+            <div class="signal-row">
+              <span class="signal-name">Friends' activity</span>
+              <div class="signal-bar-wrap"><div class="signal-bar" style="width:55%"></div></div>
+              <span class="signal-pct">55%</span>
+            </div>
+          </div>
+          <div class="intel-arrow">↓</div>
+          <div class="intel-output">
+            Hapa surfaces: <span>"Rooftop bar in Lekki — 8 minutes away. Your favourite creator posted about it today. Two friends are going tonight. Live music starts at 8pm."</span> — Before you opened the app.
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--cream); margin-bottom:1.5rem; line-height:1.3;">What makes this different from every other algorithm</h3>
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+          <div>
+            <h4 style="font-weight:600; font-size:0.9rem; color:var(--cream); margin-bottom:0.4rem;">Instagram / TikTok</h4>
+            <p style="font-size:0.86rem; color:var(--muted); line-height:1.7;">Optimises for global engagement. A creator in Kampala gets recommended to someone in Toronto. The content travels. The commerce doesn't. The connection is shallow.</p>
+          </div>
+          <div>
+            <h4 style="font-weight:600; font-size:0.9rem; color:var(--cream); margin-bottom:0.4rem;">Google Maps</h4>
+            <p style="font-size:0.86rem; color:var(--muted); line-height:1.7;">Knows where you are. Doesn't know who you are, what you like, who influences you, or what time of day you're most likely to act. Reactive, not proactive.</p>
+          </div>
+          <div style="border-top: 1px solid rgba(200,133,58,0.15); padding-top:1.5rem;">
+            <h4 style="font-weight:600; font-size:0.9rem; color:var(--ochre); margin-bottom:0.4rem;">Hapa</h4>
+            <p style="font-size:0.86rem; color:var(--sand); line-height:1.7;">Knows where you are AND who you are within that location. Combines real-time location with temporal patterns, social graph, content behaviour, and creator follows — all filtered through a single city. The result is personalisation no global platform can replicate.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- CREATOR ECONOMY -->
+<section id="creators">
+  <div class="container">
+    <div class="section-label">The Creator Layer</div>
+    <h2 class="section-title">Local creators.<br><em>Local impact.</em> Finally.</h2>
+    <p class="body-text">Africa's creator economy is worth $3 billion today and growing to $17.8 billion by 2030. Yet six in ten African creators earn less than $100 a month. The reason is structural: global platforms send their content everywhere, but the commerce never closes locally. Hapa fixes this.</p>
+
+    <div class="creator-split">
+      <div class="creator-left">
+        <div class="creator-stat">
+          <span class="num">$3B</span>
+          <span class="label">Africa creator economy<br>today — growing to $17.8B by 2030</span>
+        </div>
+        <div class="creator-stat">
+          <span class="num">60%</span>
+          <span class="label">African creators earning<br>under $100/month</span>
+        </div>
+        <div class="creator-stat">
+          <span class="num">272M</span>
+          <span class="label">Advertiser-targetable creator<br>accounts across 4 African markets</span>
+        </div>
+        <p style="font-size:0.85rem; color:var(--muted); line-height:1.7; margin-top:1.5rem;">The audience exists. The content exists. The problem is that no platform connects the creator's local audience to the local business they're talking about. Until now.</p>
+      </div>
+      <div class="creator-right">
+        <div class="section-label" style="margin-bottom:1.5rem;">What Hapa Voices Changes</div>
+        <div class="creator-points">
+          <div class="creator-point">
+            <span class="cp-icon">🎯</span>
+            <div class="cp-content">
+              <h4>Hyper-local audience building</h4>
+              <p>A food creator in Kampala builds followers who are actually in Kampala. When they recommend a restaurant, those followers can walk there. That's a closed loop Instagram has never offered.</p>
+            </div>
+          </div>
+          <div class="creator-point">
+            <span class="cp-icon">🤝</span>
+            <div class="cp-content">
+              <h4>Creator-business partnerships</h4>
+              <p>Hapa brokers local creator-business deals inside the platform. A restaurant partners with a food creator nearby. The creator promotes. The business tracks bookings from that creator directly. Commission flows through Hapa.</p>
+            </div>
+          </div>
+          <div class="creator-point">
+            <span class="cp-icon">💰</span>
+            <div class="cp-content">
+              <h4>Real monetisation for local creators</h4>
+              <p>Creators earn from Hapa Boost partnerships, local brand deals, and a creator fund. Not from global ad rates that don't work in African markets — from real local transactions they influenced.</p>
+            </div>
+          </div>
+          <div class="creator-point">
+            <span class="cp-icon">📈</span>
+            <div class="cp-content">
+              <h4>Content that drives foot traffic</h4>
+              <p>Every post, review, and recommendation on Hapa Voices is location-tagged and discoverable by people nearby. Content doesn't disappear into a global feed — it lives in the city it was made for.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- PROBLEM / COMPETITION -->
+<section style="background:var(--charcoal);">
+  <div class="container">
+    <div class="section-label">The Gap</div>
+    <h2 class="section-title">Six tools do <em>pieces</em> of this.<br>None do all of it.</h2>
+    <p class="body-text">Every existing platform solves one dimension of what Hapa solves completely. None of them know where you live, what you do there daily, who influences you locally, and what you need before you ask.</p>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Platform</th>
+          <th>Daily Local Life</th>
+          <th>Travel Intelligence</th>
+          <th>Cultural Intel</th>
+          <th>Local Creators</th>
+          <th>Predictive AI</th>
+          <th>In-App Booking</th>
+          <th>Africa-First</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Google Maps</td>
+          <td><span class="partial">~</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="partial">~</span></td>
+          <td><span class="cross">✗</span></td>
+        </tr>
+        <tr>
+          <td>Instagram</td>
+          <td><span class="partial">~</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="partial">~</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+        </tr>
+        <tr>
+          <td>TripAdvisor</td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="cross">✗</span></td>
+        </tr>
+        <tr>
+          <td>Nextdoor</td>
+          <td><span class="check">✓</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+        </tr>
+        <tr>
+          <td>Facebook</td>
+          <td><span class="partial">~</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="partial">~</span></td>
+          <td><span class="partial">~</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+        </tr>
+        <tr class="hapa-row">
+          <td>Hapa</td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- MARKET -->
+<section id="market">
+  <div class="container">
+    <div class="section-label">Market Opportunity</div>
+    <h2 class="section-title">Three massive markets.<br><em>One platform.</em></h2>
+    <p class="body-text">Hapa doesn't operate in one market. It sits at the intersection of three high-growth markets — each worth billions, each underserved in Africa, none of them currently unified by a single platform.</p>
+
+    <div class="market-stats">
+      <div class="stat-box">
+        <span class="stat-num">$439B</span>
+        <span class="stat-label">Global hyperlocal<br>services 2026</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">$323B</span>
+        <span class="stat-label">Global creator<br>economy 2026</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">$4.3B</span>
+        <span class="stat-label">Africa digital ad<br>market 2026</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">337M</span>
+        <span class="stat-label">New African internet<br>users by 2029</span>
+      </div>
+    </div>
+
+    <div class="market-pools">
+      <div class="pool">
+        <div class="pool-tag">Pool 01 — Hyperlocal Services</div>
+        <div class="pool-size">$439B → $942B</div>
+        <p>The hyperlocal services market grows at 13.1% CAGR through 2033. Hapa taps this through business listings, bookings, and Hapa Boost promotions — intent-based discovery that outperforms every existing format.</p>
+      </div>
+      <div class="pool">
+        <div class="pool-tag">Pool 02 — Creator Economy</div>
+        <div class="pool-size">$17.8B by 2030 in Africa</div>
+        <p>Africa's creator economy is culturally rich but commercially broken. 60% of creators earn under $100 a month because local monetisation doesn't exist. Hapa Voices creates the first local creator-to-commerce pipeline on the continent.</p>
+      </div>
+      <div class="pool">
+        <div class="pool-tag">Pool 03 — Local Digital Advertising</div>
+        <div class="pool-size">$6.5B by 2029 in Africa</div>
+        <p>Africa's digital ad market grows at 15.3% CAGR to 2029 — but global platforms like Meta and TikTok capture most of it with broad targeting. Hapa's hyper-local, intent-based model takes share with superior ROI for local businesses.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- DUAL USER JOURNEY -->
+<section style="background:var(--charcoal);">
+  <div class="container">
+    <div class="section-label">The Hapa Moment</div>
+    <h2 class="section-title">Two lives.<br>One <em>platform at work.</em></h2>
+    <p class="body-text">This is what Hapa looks like in real life — for the person who has lived in their city for years, and the person who just arrived.</p>
+
+    <div class="journey-dual">
+      <div class="journey-col">
+        <h4>The Resident — Amara, Lagos</h4>
+        <div class="j-steps">
+          <div class="j-step">
+            <div class="j-dot">☀️</div>
+            <div class="j-text">
+              <h5>Monday morning</h5>
+              <p>Hapa shows her what's trending in Surulere today. A creator she follows posted about a new café two streets away. It surfaces without her searching.</p>
+            </div>
+          </div>
+          <div class="j-step">
+            <div class="j-dot">🕐</div>
+            <div class="j-text">
+              <h5>Wednesday lunch</h5>
+              <p>Hapa Boost pushes a lunch deal from a restaurant 400m away — because it knows she browses food content between 12 and 1pm every weekday.</p>
+            </div>
+          </div>
+          <div class="j-step">
+            <div class="j-dot">🎵</div>
+            <div class="j-text">
+              <h5>Friday evening</h5>
+              <p>Before she opens the app, a notification: rooftop bar in Lekki, live music at 8pm, two friends attending, her favourite food creator recommended it today.</p>
+            </div>
+          </div>
+          <div class="j-step">
+            <div class="j-dot">🤝</div>
+            <div class="j-text">
+              <h5>The network compounds</h5>
+              <p>She has friends on Hapa, follows creators she trusts, and her local business circle grows. Lagos lives in Hapa. Hapa lives in her daily routine.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="journey-col">
+        <h4>The Traveller — David, New York → Nairobi</h4>
+        <div class="j-steps">
+          <div class="j-step">
+            <div class="j-dot">✈️</div>
+            <div class="j-text">
+              <h5>He lands</h5>
+              <p>Hapa detects the location change. The feed flips to Nairobi instantly. No searching required. His New York context is set aside — Nairobi takes over.</p>
+            </div>
+          </div>
+          <div class="j-step">
+            <div class="j-dot">🧭</div>
+            <div class="j-text">
+              <h5>He's oriented</h5>
+              <p>Cultural briefing loads. Key Swahili greetings, local etiquette, neighbourhood breakdown, what every visitor gets wrong. He reads it in the taxi.</p>
+            </div>
+          </div>
+          <div class="j-step">
+            <div class="j-dot">🏨</div>
+            <div class="j-text">
+              <h5>He's settled</h5>
+              <p>AI recommends three hotels within budget and walking distance. He asks "which one has the best reviews from business travellers?" Hapa answers. He books in two taps.</p>
+            </div>
+          </div>
+          <div class="j-step">
+            <div class="j-dot">👥</div>
+            <div class="j-text">
+              <h5>He belongs</h5>
+              <p>Hapa shows him locals with shared interests nearby and what's happening tonight. By evening, he's not a tourist. He's someone who knows where to be.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- BUSINESS MODEL -->
+<section id="model">
+  <div class="container">
+    <div class="section-label">Business Model</div>
+    <h2 class="section-title">We get paid when<br>things <em>actually happen.</em></h2>
+    <p class="body-text">Hapa's revenue is tied to real-world outcomes — a business gets found, a booking is completed, a creator drives a sale. Not impressions. Not interruptions. Outcomes.</p>
+
+    <div class="revenue-grid">
+      <div class="revenue-card">
+        <div class="tag">Stream 01</div>
+        <h3>Business Listings</h3>
+        <p>Businesses register on Hapa Places. Free tier for visibility. Paid tiers unlock priority placement, verified badges, rich profiles, and booking integration. Every business in Kampala, Lagos, or Nairobi wants to be on this list.</p>
+        <div class="amount">$10–$80 / month per business</div>
+      </div>
+      <div class="revenue-card">
+        <div class="tag">Stream 02</div>
+        <h3>Hapa Boost</h3>
+        <p>Hyper-local promotional pushes to people within a defined radius, right now. A restaurant targets people within 500m during lunch hour. A hotel targets arrivals at the airport. Targeting precision that Meta cannot match.</p>
+        <div class="amount">Pay-per-push / CPM model</div>
+      </div>
+      <div class="revenue-card">
+        <div class="tag">Stream 03</div>
+        <h3>Booking Commissions</h3>
+        <p>Every hotel, restaurant, or service booking completed inside Hapa generates a commission. The AI closes the transaction — from discovery to confirmation without the user leaving the app. Two taps. Done.</p>
+        <div class="amount">8–15% per completed booking</div>
+      </div>
+      <div class="revenue-card">
+        <div class="tag">Stream 04</div>
+        <h3>Creator Commerce</h3>
+        <p>Hapa brokers creator-business partnerships locally. A food creator partners with a restaurant. Hapa tracks the attribution, processes the arrangement, and takes a platform fee. Local creators finally earn from local impact.</p>
+        <div class="amount">15–20% platform fee on deals</div>
+      </div>
+      <div class="revenue-card">
+        <div class="tag">Stream 05</div>
+        <h3>Hapa Pro</h3>
+        <p>Premium subscription for power users — frequent travellers, expats, remote workers, digital nomads. Deeper cultural intelligence, offline guides, multi-city planning, advanced people discovery, priority AI responses.</p>
+        <div class="amount">$4.99–$9.99 / month</div>
+      </div>
+      <div class="revenue-card">
+        <div class="tag">Stream 06 — Future</div>
+        <h3>Data & API Licensing</h3>
+        <p>Hapa's location-behaviour dataset becomes one of the most valuable in emerging markets. Travel platforms, FMCG brands, city planners, and logistics companies will pay for anonymised local intelligence at scale.</p>
+        <div class="amount">Enterprise licensing — Year 3+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- MOAT -->
+<section style="background:var(--charcoal);">
+  <div class="container">
+    <div class="section-label">Defensibility</div>
+    <h2 class="section-title">Five moats<br><em>no one can buy quickly.</em></h2>
+
+    <div class="moat-grid">
+      <div class="moat-card">
+        <h3>The Social Graph</h3>
+        <p>Google has places. TripAdvisor has reviews. Instagram has followers. None of them have a location-anchored social graph — friends, creators, and communities tied to specific cities. Once Hapa users build this graph, they don't leave. That graph takes a decade to build and cannot be copied overnight.</p>
+      </div>
+      <div class="moat-card">
+        <h3>Behavioural Data Depth</h3>
+        <p>Every day a resident uses Hapa, the recommendation engine gets sharper. After 90 days of daily use, Hapa knows a Lagos user's patterns better than they know themselves. That data advantage compounds with time — and it's impossible to replicate without the user base to generate it.</p>
+      </div>
+      <div class="moat-card">
+        <h3>Cultural Intelligence Layer</h3>
+        <p>Slangs, customs, and local knowledge — contributed by locals, verified by community, updated continuously. This is a living dataset that Google Translate will never have. The more cities Hapa covers, the richer and more defensible it becomes.</p>
+      </div>
+      <div class="moat-card">
+        <h3>Africa as a Fortress</h3>
+        <p>Global platforms are weak in smaller African cities, mobile money flows, local language nuance, and informal business ecosystems. Hapa goes deep in East Africa first — and by the time global players notice, the network effects are irreversible.</p>
+      </div>
+      <div class="moat-card moat-wide">
+        <h3>The Creator-Commerce Loop</h3>
+        <p>No platform has successfully closed the creator-to-local-commerce loop in Africa. Once Hapa establishes this — local creators building local audiences that drive local transactions — the flywheel becomes self-reinforcing. Creators come for the local audience. Businesses come for the creators. Users come for both. The loop locks everyone in.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- GO TO MARKET -->
+<section id="gtm">
+  <div class="container">
+    <div class="section-label">Go-to-Market Strategy</div>
+    <h2 class="section-title">Plant the flag deep.<br><em>Then go wide.</em></h2>
+    <p class="body-text">Hapa does not launch globally on day one. It becomes indispensable in one city before expanding. Depth before breadth. Network effects before scale. The window to establish market leadership in Africa is open — but not for long.</p>
+
+    <div style="margin-top:4rem;">
+      <div class="phase">
+        <div class="phase-label">
+          <div class="pnum">Phase 01</div>
+          <h4>The Fortress</h4>
+          <div class="timeline">Months 1–6</div>
+        </div>
+        <div class="phase-content">
+          <p>Launch in Kampala. One city. Full depth. Recruit 200 founding locals — boda drivers, restaurant owners, students, market traders, creators. They seed the cultural intelligence layer and become the platform's living proof of concept. Give them Hapa Pro free for life.</p>
+          <div class="phase-items">
+            <span class="phase-item">Kampala only</span>
+            <span class="phase-item">200 founding locals</span>
+            <span class="phase-item">50 registered businesses</span>
+            <span class="phase-item">Cultural guide seed content</span>
+            <span class="phase-item">10 local creators onboarded</span>
+            <span class="phase-item">University partnerships</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-label">
+          <div class="pnum">Phase 02</div>
+          <h4>The Corridor</h4>
+          <div class="timeline">Months 6–18</div>
+        </div>
+        <div class="phase-content">
+          <p>Expand along East Africa's high-travel corridors: Nairobi, Dar es Salaam, Kigali, Addis Ababa. Users who rely on Hapa in Kampala expect it in Nairobi. Serve that expectation. Build the habit across borders. Swahili and Luganda AI layers go live.</p>
+          <div class="phase-items">
+            <span class="phase-item">5 East African cities</span>
+            <span class="phase-item">Business onboarding teams</span>
+            <span class="phase-item">Swahili + Luganda AI</span>
+            <span class="phase-item">Mobile money booking</span>
+            <span class="phase-item">Creator fund launch</span>
+            <span class="phase-item">Seed funding round</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-label">
+          <div class="pnum">Phase 03</div>
+          <h4>The Continent</h4>
+          <div class="timeline">Months 18–36</div>
+        </div>
+        <div class="phase-content">
+          <p>Pan-African expansion. Lagos, Accra, Johannesburg, Cairo, Casablanca. Each city gets a local community build before the platform opens publicly. By this point, Hapa is the default way to live in and arrive in Africa. The data moat is deep.</p>
+          <div class="phase-items">
+            <span class="phase-item">20+ African cities</span>
+            <span class="phase-item">10 language layers</span>
+            <span class="phase-item">10,000+ businesses</span>
+            <span class="phase-item">100+ local creator partnerships</span>
+            <span class="phase-item">Series A raise</span>
+            <span class="phase-item">API licensing begins</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-label">
+          <div class="pnum">Phase 04</div>
+          <h4>The World</h4>
+          <div class="timeline">Year 3+</div>
+        </div>
+        <div class="phase-content">
+          <p>Hapa goes global from a position of strength, not ambition. The cultural intelligence model that mastered Africa now extends to every city on earth. The social graph, the creator layer, the behavioural engine — all export perfectly. Hapa becomes the platform that every city in the world runs on.</p>
+          <div class="phase-items">
+            <span class="phase-item">Global expansion</span>
+            <span class="phase-item">100+ cities</span>
+            <span class="phase-item">Travel brand partnerships</span>
+            <span class="phase-item">Enterprise data licensing</span>
+            <span class="phase-item">Series B+</span>
+            <span class="phase-item">Global creator economy layer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- BIG QUOTE -->
+<section>
+  <div class="container">
+    <div class="big-quote">
+      "Google owns <span>search</span>. Instagram owns <span>moments</span>. Facebook owns <span>the social graph</span>.<br>
+      Hapa owns <span>where you are</span> — and everything that means."
+    </div>
+  </div>
+</section>
+
+<!-- VISION -->
+<section class="vision" id="vision">
+  <div class="section-label">Our Vision</div>
+  <h2 class="section-title">A world where your city<br>always <em>moves with you.</em></h2>
+  <p class="vision-statement">"Hapa is not a travel app. It is not a social network. It is the living, breathing, location-intelligent layer that sits on top of every city in the world — knowing who you are within it, anticipating what you need next, connecting you to the people and places that matter right now. Whether you arrived ten years ago or ten minutes ago. Hapa moves before you move. And it moves with you, always."</p>
+</section>
+
+<!-- CLOSING -->
+<section class="closing">
+  <div class="container">
+    <div class="section-label" style="justify-content:center;">Join the Movement</div>
+    <h2 class="section-title">We are building the layer<br><em>every city in the world needs.</em></h2>
+    <p class="body-text" style="margin:0 auto; text-align:center;">Whether you are an investor who sees the scope of what we are building, a business owner who wants to be found before your competitor, a creator ready for an audience that actually shows up, or someone who is tired of feeling like a stranger — Hapa is for you. This is not a product pitch. This is an invitation.</p>
+    <div class="cta-block">
+      <a href="#" class="cta-primary">Register Your Business</a>
+      <a href="#" class="cta-secondary">Partner With Us</a>
+      <a href="#" class="cta-secondary">Invest in Hapa</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Hapa</div>
+  <div class="footer-copy">
+    <div>Platform Profile & Building Manifesto — Version 2</div>
+    <div style="margin-top:0.3rem; opacity:0.5;">hapa.world · 2026 · Moves Before You Move</div>
+  </div>
+</footer>
+
+</body>
+</html>

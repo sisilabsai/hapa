@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+backend/.env
+dashboard/.env*
+
+# Build artifacts
+backend/bin/
+*.exe
+*.test
+
+# Go
+go.sum
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

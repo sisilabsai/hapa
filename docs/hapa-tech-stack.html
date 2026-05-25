@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hapa — Technical Architecture & Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0E14;
+    --bg2: #0F1419;
+    --bg3: #151C26;
+    --surface: #1A2332;
+    --border: rgba(0,212,255,0.1);
+    --border-bright: rgba(0,212,255,0.25);
+    --cyan: #00D4FF;
+    --cyan-dim: rgba(0,212,255,0.6);
+    --green: #00FF88;
+    --green-dim: rgba(0,255,136,0.6);
+    --amber: #FFB800;
+    --amber-dim: rgba(255,184,0,0.6);
+    --red: #FF4444;
+    --purple: #8B5CF6;
+    --text: #C8D8E8;
+    --text-dim: #5A7080;
+    --text-bright: #E8F4FF;
+    --ochre: #C47B2B;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* SCANLINES EFFECT */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,14,20,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 52px;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 1rem; }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem; color: var(--cyan); letter-spacing: 0.1em;
+  }
+  .nav-sep { color: var(--border-bright); }
+  .nav-doc {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem;
+    color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase;
+  }
+  .nav-status {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem;
+    color: var(--green);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .nav-links { display: flex; gap: 0; list-style: none; }
+  .nav-links a {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.57rem;
+    color: var(--text-dim); text-decoration: none; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.35rem 0.8rem;
+    border: 1px solid transparent; transition: all 0.15s;
+  }
+  .nav-links a:hover { color: var(--cyan); border-color: var(--border); }
+
+  /* HERO */
+  .hero {
+    padding: 5rem 2.5rem 4rem;
+    border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+    max-width: 1280px; margin: 0 auto;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1fr 380px; gap: 4rem; align-items: start; }
+  .hero-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.3em; color: var(--cyan); text-transform: uppercase;
+    margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem;
+  }
+  .hero-tag::before { content: '▶'; font-size: 0.5rem; }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.5rem, 7vw, 6.5rem); line-height: 0.92;
+    letter-spacing: 0.04em; color: var(--text-bright); margin-bottom: 1.5rem;
+  }
+  .hero-title .cyan { color: var(--cyan); }
+  .hero-desc {
+    font-size: 0.95rem; color: var(--text-dim); line-height: 1.85;
+    max-width: 560px; margin-bottom: 2rem;
+  }
+  .hero-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.3rem 0.8rem; border: 1px solid;
+  }
+  .badge-cyan { color: var(--cyan); border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.05); }
+  .badge-green { color: var(--green); border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.05); }
+  .badge-amber { color: var(--amber); border-color: rgba(255,184,0,0.3); background: rgba(255,184,0,0.05); }
+  .badge-purple { color: var(--purple); border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.05); }
+
+  /* TERMINAL BOX */
+  .terminal {
+    background: var(--bg2); border: 1px solid var(--border-bright);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+    overflow: hidden;
+  }
+  .terminal-bar {
+    background: var(--surface); padding: 0.6rem 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .term-dot.red { background: #FF5F57; }
+  .term-dot.yellow { background: #FFBD2E; }
+  .term-dot.green { background: #28CA41; }
+  .terminal-title { color: var(--text-dim); font-size: 0.6rem; letter-spacing: 0.1em; margin-left: auto; }
+  .terminal-body { padding: 1.2rem 1.5rem; line-height: 2; }
+  .t-prompt { color: var(--cyan); }
+  .t-cmd { color: var(--text-bright); }
+  .t-comment { color: var(--text-dim); }
+  .t-key { color: var(--amber); }
+  .t-val { color: var(--green); }
+  .t-str { color: var(--purple); }
+  .t-line { display: block; }
+
+  /* PAGE */
+  .page { max-width: 1280px; margin: 0 auto; padding: 0 2.5rem; }
+
+  /* CHAPTER */
+  .chapter { padding: 4.5rem 0; border-bottom: 1px solid var(--border); }
+  .chapter:last-child { border-bottom: none; }
+
+  .chapter-header {
+    display: flex; align-items: flex-start; gap: 2rem; margin-bottom: 3.5rem;
+    padding-bottom: 2rem; border-bottom: 1px solid var(--border);
+  }
+  .chapter-num {
+    font-family: 'Bebas Neue', sans-serif; font-size: 5rem; line-height: 1;
+    color: var(--border-bright); letter-spacing: 0.05em; flex-shrink: 0;
+  }
+  .chapter-meta {}
+  .chapter-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.25em; color: var(--cyan); text-transform: uppercase; margin-bottom: 0.5rem;
+  }
+  .chapter-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 4vw, 3.5rem); letter-spacing: 0.05em;
+    color: var(--text-bright); line-height: 1;
+  }
+  .chapter-title .hi { color: var(--cyan); }
+  .chapter-sub {
+    font-size: 0.9rem; color: var(--text-dim); margin-top: 0.8rem;
+    max-width: 650px; line-height: 1.8;
+  }
+
+  /* SECTION LABEL */
+  .sec-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.2em; color: var(--cyan); text-transform: uppercase;
+    margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem;
+  }
+  .sec-label::before { content: '//'; color: var(--text-dim); }
+
+  /* DIVIDER */
+  .div { height: 1px; background: var(--border); margin: 2.5rem 0; }
+
+  /* STACK CARD */
+  .stack-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 1.5rem 0; }
+  .stack-card {
+    background: var(--bg2); padding: 1.8rem;
+    transition: background 0.2s; position: relative; overflow: hidden;
+  }
+  .stack-card:hover { background: var(--bg3); }
+  .stack-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, var(--cyan), transparent);
+  }
+  .sc-tech {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+    letter-spacing: 0.08em; color: var(--cyan); margin-bottom: 0.3rem;
+  }
+  .sc-role {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.8rem;
+  }
+  .sc-desc { font-size: 0.83rem; color: var(--text-dim); line-height: 1.7; margin-bottom: 0.8rem; }
+  .sc-why {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+    color: var(--green); padding: 0.5rem 0.8rem;
+    background: rgba(0,255,136,0.05); border-left: 2px solid var(--green);
+    line-height: 1.5;
+  }
+
+  /* DECISION TABLE */
+  .dec-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.84rem; }
+  .dec-table th {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--cyan);
+    padding: 0.8rem 1.2rem; text-align: left;
+    border-bottom: 1px solid var(--border-bright); background: var(--surface);
+  }
+  .dec-table td {
+    padding: 0.9rem 1.2rem; color: var(--text-dim);
+    border-bottom: 1px solid var(--border); vertical-align: top;
+  }
+  .dec-table tr:last-child td { border-bottom: none; }
+  .dec-table tr:hover td { background: var(--bg3); }
+  .dec-table td:first-child { color: var(--text-bright); font-weight: 500; }
+  .win { color: var(--green) !important; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; }
+  .lose { color: var(--red) !important; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; }
+  .neutral { color: var(--amber) !important; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; }
+
+  /* ARCH DIAGRAM */
+  .arch-layer {
+    border: 1px solid var(--border); margin-bottom: 1px;
+    display: grid; grid-template-columns: 140px 1fr;
+  }
+  .arch-label {
+    background: var(--surface); padding: 1.2rem 1.5rem;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 0.3rem;
+  }
+  .arch-label-name {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--cyan);
+  }
+  .arch-label-sub {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.52rem; color: var(--text-dim);
+  }
+  .arch-content {
+    padding: 1.2rem 1.5rem;
+    display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  }
+  .arch-chip {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.06em; padding: 0.3rem 0.8rem;
+    border: 1px solid; transition: all 0.15s; cursor: default;
+  }
+  .chip-cyan { color: var(--cyan); border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.05); }
+  .chip-cyan:hover { background: rgba(0,212,255,0.1); }
+  .chip-green { color: var(--green); border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.05); }
+  .chip-amber { color: var(--amber); border-color: rgba(255,184,0,0.3); background: rgba(255,184,0,0.05); }
+  .chip-purple { color: var(--purple); border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.05); }
+  .chip-red { color: var(--red); border-color: rgba(255,68,68,0.3); background: rgba(255,68,68,0.05); }
+  .arch-arrow {
+    text-align: center; color: var(--border-bright); font-size: 1rem;
+    padding: 0.3rem; background: var(--bg); border: 1px solid var(--border);
+    margin-bottom: 1px;
+  }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: var(--bg2); border: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+    padding: 1.5rem; line-height: 1.9; margin: 1.5rem 0; overflow-x: auto;
+  }
+  .code-block .c-comment { color: var(--text-dim); }
+  .code-block .c-key { color: var(--amber); }
+  .code-block .c-val { color: var(--green); }
+  .code-block .c-str { color: var(--purple); }
+  .code-block .c-type { color: var(--cyan); }
+  .code-block .c-fn { color: #FF7B72; }
+  .code-block .c-num { color: var(--amber); }
+
+  /* SPEC BOX */
+  .spec-box {
+    border: 1px solid var(--border); padding: 1.5rem;
+    background: var(--bg2); position: relative; margin-bottom: 1rem;
+  }
+  .spec-box-label {
+    position: absolute; top: -0.55rem; left: 1rem;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    background: var(--bg); color: var(--cyan); padding: 0 0.5rem;
+  }
+  .spec-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.3rem; }
+  .spec-list li {
+    font-size: 0.84rem; color: var(--text-dim); line-height: 1.6;
+    display: flex; gap: 0.8rem; align-items: flex-start;
+  }
+  .spec-list li::before { content: '→'; color: var(--cyan); font-size: 0.7rem; flex-shrink: 0; padding-top: 0.2rem; font-family: 'IBM Plex Mono', monospace; }
+
+  /* PRINCIPLE */
+  .principle {
+    border-left: 2px solid var(--cyan); padding: 1.2rem 1.5rem;
+    background: rgba(0,212,255,0.03); margin: 1.5rem 0;
+  }
+  .principle p { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: var(--text-bright); line-height: 1.7; font-style: italic; }
+  .principle .attr { font-size: 0.6rem; color: var(--text-dim); margin-top: 0.5rem; letter-spacing: 0.1em; }
+
+  /* PHASE BLOCK */
+  .phase-stack { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 1.5rem 0; }
+  .phase-row { background: var(--bg2); display: grid; grid-template-columns: 160px 1fr 200px; }
+  .phase-left {
+    padding: 1.5rem; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 0.3rem; justify-content: center;
+  }
+  .phase-num { font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; letter-spacing: 0.15em; color: var(--cyan); text-transform: uppercase; }
+  .phase-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.08em; color: var(--text-bright); }
+  .phase-time { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--text-dim); }
+  .phase-mid { padding: 1.5rem; }
+  .phase-mid p { font-size: 0.84rem; color: var(--text-dim); line-height: 1.75; }
+  .phase-right {
+    padding: 1.5rem; border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 0.4rem;
+  }
+  .phase-right .r-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.52rem; letter-spacing: 0.1em; color: var(--text-dim); text-transform: uppercase; }
+  .phase-right .r-val { font-size: 0.8rem; color: var(--text-bright); font-weight: 500; }
+
+  /* METRIC GRID */
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 1.5rem 0; }
+  .metric-box { background: var(--bg2); padding: 1.5rem; text-align: center; }
+  .metric-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 0.05em; color: var(--cyan); display: block; line-height: 1; margin-bottom: 0.3rem; }
+  .metric-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; color: var(--text-dim); text-transform: uppercase; line-height: 1.5; }
+
+  /* DECISION BOX */
+  .decision {
+    border: 1px solid var(--border-bright); padding: 2rem;
+    background: rgba(0,212,255,0.03); margin: 1.5rem 0; position: relative;
+  }
+  .decision::before {
+    content: 'DECISION'; position: absolute; top: -0.6rem; left: 1rem;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.52rem;
+    letter-spacing: 0.2em; background: var(--bg); color: var(--cyan); padding: 0 0.5rem;
+  }
+  .decision h4 { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.06em; color: var(--text-bright); margin-bottom: 0.8rem; }
+  .decision p { font-size: 0.86rem; color: var(--text-dim); line-height: 1.75; }
+  .decision .verdict { margin-top: 1rem; padding: 0.7rem 1rem; background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--green); }
+  .decision .verdict::before { content: '✓ VERDICT: '; }
+
+  /* SECURITY */
+  .sec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 1.5rem 0; }
+  .sec-card { background: var(--bg2); padding: 1.8rem; }
+  .sec-card h4 { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--amber); text-transform: uppercase; margin-bottom: 1rem; }
+  .sec-card ul { list-style: none; display: flex; flex-direction: column; gap: 0.45rem; }
+  .sec-card ul li { font-size: 0.83rem; color: var(--text-dim); display: flex; gap: 0.7rem; align-items: flex-start; line-height: 1.6; }
+  .sec-card ul li::before { content: '⬡'; color: var(--amber); font-size: 0.6rem; flex-shrink: 0; padding-top: 0.2rem; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); padding: 2.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg2); max-width: 1280px; margin: 0 auto;
+  }
+  .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--cyan); letter-spacing: 0.1em; }
+  .footer-info { font-family: 'IBM Plex Mono', monospace; font-size: 0.57rem; color: var(--text-dim); text-align: right; line-height: 1.9; }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 1.2rem; }
+    .nav-links { display: none; }
+    .hero { padding: 3rem 1.5rem 2.5rem; }
+    .hero-grid { grid-template-columns: 1fr; }
+    .page { padding: 0 1.5rem; }
+    .stack-grid, .two-col, .three-col, .metric-grid, .sec-grid { grid-template-columns: 1fr; }
+    .arch-layer { grid-template-columns: 1fr; }
+    .arch-label { border-right: none; border-bottom: 1px solid var(--border); }
+    .phase-row { grid-template-columns: 1fr; }
+    .phase-left, .phase-right { border: none; border-bottom: 1px solid var(--border); }
+    .chapter-header { flex-direction: column; gap: 0.5rem; }
+    footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+    .footer-info { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <span class="nav-logo">HAPA</span>
+    <span class="nav-sep">|</span>
+    <span class="nav-doc">Technical Architecture — v1.0</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#decision">Decision</a></li>
+    <li><a href="#frontend">Frontend</a></li>
+    <li><a href="#backend">Backend</a></li>
+    <li><a href="#database">Database</a></li>
+    <li><a href="#location">Location</a></li>
+    <li><a href="#ai">AI & ML</a></li>
+    <li><a href="#infra">Infra</a></li>
+    <li><a href="#payments">Payments</a></li>
+    <li><a href="#security">Security</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+  </ul>
+  <div class="nav-status"><div class="status-dot"></div>Stack Defined</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-tag">Hapa Technical Architecture Document</div>
+      <h1 class="hero-title">BUILT FOR<br><span class="cyan">AFRICA.</span><br>BUILT TO<br>SCALE.</h1>
+      <p class="hero-desc">Every technology decision in this document is made for one primary constraint: Hapa must work beautifully on a Tecno Spark with 2GB RAM on a 3G connection in Kampala. Everything else follows from that.</p>
+      <div class="hero-badges">
+        <span class="badge badge-cyan">Flutter Native</span>
+        <span class="badge badge-green">PostgreSQL + PostGIS</span>
+        <span class="badge badge-amber">Go Backend</span>
+        <span class="badge badge-purple">GCP Africa Region</span>
+        <span class="badge badge-cyan">Offline-First</span>
+        <span class="badge badge-green">Mobile Money Native</span>
+      </div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="term-dot red"></div>
+        <div class="term-dot yellow"></div>
+        <div class="term-dot green"></div>
+        <span class="terminal-title">hapa_stack.yaml</span>
+      </div>
+      <div class="terminal-body">
+        <span class="t-line"><span class="t-key">platform:</span> <span class="t-val">hapa</span></span>
+        <span class="t-line"><span class="t-key">version:</span> <span class="t-val">1.0.0</span></span>
+        <span class="t-line"></span>
+        <span class="t-line"><span class="t-key">frontend:</span></span>
+        <span class="t-line">  <span class="t-key">mobile:</span> <span class="t-str">Flutter 3.x</span></span>
+        <span class="t-line">  <span class="t-key">web_dashboard:</span> <span class="t-str">Next.js 15</span></span>
+        <span class="t-line"></span>
+        <span class="t-line"><span class="t-key">backend:</span></span>
+        <span class="t-line">  <span class="t-key">language:</span> <span class="t-str">Go 1.22</span></span>
+        <span class="t-line">  <span class="t-key">architecture:</span> <span class="t-str">Modular Monolith</span></span>
+        <span class="t-line">  <span class="t-key">api:</span> <span class="t-str">REST + GraphQL</span></span>
+        <span class="t-line"></span>
+        <span class="t-line"><span class="t-key">database:</span></span>
+        <span class="t-line">  <span class="t-key">primary:</span> <span class="t-str">PostgreSQL + PostGIS</span></span>
+        <span class="t-line">  <span class="t-key">cache:</span> <span class="t-str">Redis</span></span>
+        <span class="t-line">  <span class="t-key">search:</span> <span class="t-str">Meilisearch</span></span>
+        <span class="t-line"></span>
+        <span class="t-line"><span class="t-key">infra:</span></span>
+        <span class="t-line">  <span class="t-key">cloud:</span> <span class="t-str">GCP — Johannesburg</span></span>
+        <span class="t-line">  <span class="t-key">containers:</span> <span class="t-str">Cloud Run → GKE</span></span>
+        <span class="t-line">  <span class="t-key">cdn:</span> <span class="t-str">Cloudflare R2</span></span>
+        <span class="t-line"></span>
+        <span class="t-line"><span class="t-key">payments:</span></span>
+        <span class="t-line">  <span class="t-key">primary:</span> <span class="t-str">Flutterwave</span></span>
+        <span class="t-line">  <span class="t-key">secondary:</span> <span class="t-str">Paystack</span></span>
+        <span class="t-line">  <span class="t-key">mobile_money:</span> <span class="t-val">true</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ═══════════ CHAPTER 0: PWA vs NATIVE DECISION ═══════════ -->
+<section class="chapter" id="decision">
+  <div class="chapter-header">
+    <div class="chapter-num">00</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// The Foundational Decision</div>
+      <div class="chapter-title">PWA <span class="hi">vs</span> NATIVE</div>
+      <p class="chapter-sub">Before any other technology decision, this one. Everything downstream depends on it. The choice is not about preference — it is about what Hapa's core product requires to function correctly for its primary users.</p>
+    </div>
+  </div>
+
+  <div class="sec-label">Evaluation Matrix</div>
+  <table class="dec-table">
+    <thead>
+      <tr>
+        <th>Requirement</th>
+        <th>Why It Matters for Hapa</th>
+        <th>PWA</th>
+        <th>Flutter Native</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Background Location</td>
+        <td>City-switch detection, predictive notifications, "moved to Nairobi" trigger</td>
+        <td><span class="lose">✗ BROKEN on iOS. Limited on Android.</span></td>
+        <td><span class="win">✓ Full native API access</span></td>
+      </tr>
+      <tr>
+        <td>Push Notifications (iOS)</td>
+        <td>Hapa Flash alerts, predictive recommendations, proximity Boosts</td>
+        <td><span class="lose">✗ Requires manual home screen install. Most users never do.</span></td>
+        <td><span class="win">✓ Full APNs + FCM support</span></td>
+      </tr>
+      <tr>
+        <td>Low-end Android Performance</td>
+        <td>Tecno, Infinix, Samsung A-series — primary African market devices</td>
+        <td><span class="lose">✗ Browser engine overhead. Scroll jank on 2GB RAM.</span></td>
+        <td><span class="win">✓ Compiles to native ARM. Indistinguishable from native.</span></td>
+      </tr>
+      <tr>
+        <td>Offline-First</td>
+        <td>2G/3G drops. Feed must load. Posts must queue. Maps must render.</td>
+        <td><span class="neutral">~ Service workers fragile. Browser clears cache under memory pressure.</span></td>
+        <td><span class="win">✓ SQLite local DB. Full offline control.</span></td>
+      </tr>
+      <tr>
+        <td>Camera Access</td>
+        <td>Location Posts, Reels, business photos — media is core content</td>
+        <td><span class="neutral">~ Browser camera API. Limited compression control.</span></td>
+        <td><span class="win">✓ Native camera SDK. Full format and compression control.</span></td>
+      </tr>
+      <tr>
+        <td>Mapbox Native SDK</td>
+        <td>Offline map tiles. Low-bandwidth map rendering. Custom Hapa map style.</td>
+        <td><span class="lose">✗ Web SDK only. No offline tiles. Slower on low-end.</span></td>
+        <td><span class="win">✓ Full Mapbox Flutter SDK. Offline tiles. Native performance.</span></td>
+      </tr>
+      <tr>
+        <td>Mobile Money SDK</td>
+        <td>Flutterwave + M-Pesa + MTN MoMo native integrations</td>
+        <td><span class="neutral">~ Web redirects. Poor UX. Higher drop-off.</span></td>
+        <td><span class="win">✓ Native SDK integration. In-app payment sheets.</span></td>
+      </tr>
+      <tr>
+        <td>Development Speed</td>
+        <td>One codebase for iOS and Android</td>
+        <td><span class="win">✓ Fast to prototype</span></td>
+        <td><span class="win">✓ Single codebase. Fast with right team.</span></td>
+      </tr>
+      <tr>
+        <td>App Store Distribution</td>
+        <td>Discovery, credibility, enterprise partnerships</td>
+        <td><span class="lose">✗ Not on App Store / Play Store natively</span></td>
+        <td><span class="win">✓ Full App Store + Play Store presence</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="decision">
+    <h4>Final Decision — Flutter Native for Mobile. Next.js for Business Dashboard.</h4>
+    <p>PWA fails on the three most critical Hapa requirements: background location, iOS push notifications, and low-end Android performance. These are not edge cases — they are the core product. A PWA Hapa is a fundamentally broken Hapa. Flutter delivers native ARM performance on every device, full API access, one codebase, and offline-first capability. The business owner dashboard — analytics, bookings, Boost management — lives on the web as a Next.js application. This is natural: business owners manage their listings on desktop. Users experience Hapa on their phones.</p>
+    <div class="verdict">Flutter (iOS + Android) + Next.js 15 (Business Web Dashboard)</div>
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 1: FRONTEND ═══════════ -->
+<section class="chapter" id="frontend">
+  <div class="chapter-header">
+    <div class="chapter-num">01</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Client Layer</div>
+      <div class="chapter-title">FRONTEND <span class="hi">STACK</span></div>
+      <p class="chapter-sub">Two surfaces. One for users and creators on mobile. One for business owners on web. Different tools, same design system, shared component logic where possible.</p>
+    </div>
+  </div>
+
+  <div class="sec-label">1.1 — Mobile App: Flutter</div>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="sc-tech">Flutter 3.x</div>
+      <div class="sc-role">Core Framework</div>
+      <div class="sc-desc">Cross-platform mobile framework compiling to native ARM code for both iOS and Android. Single codebase. No JavaScript bridge. Full native API access.</div>
+      <div class="sc-why">Native performance on Tecno/Infinix devices. Low-end Android feels the difference.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Dart</div>
+      <div class="sc-role">Language</div>
+      <div class="sc-desc">Flutter's compiled language. Strongly typed, null-safe, fast to learn. Ahead-of-time compilation produces small, efficient binaries that load fast even on slow storage.</div>
+      <div class="sc-why">AOT compilation = fast startup. Critical for first impression on low-end devices.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Riverpod</div>
+      <div class="sc-role">State Management</div>
+      <div class="sc-desc">Compile-safe state management for Flutter. Handles the complex state of a location-aware, real-time social platform cleanly. Replaces Provider pattern with better testability.</div>
+      <div class="sc-why">Location state + feed state + auth state + social state — all managed without spaghetti.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">SQLite / Drift</div>
+      <div class="sc-role">Local Database</div>
+      <div class="sc-desc">Drift (formerly Moor) provides a type-safe SQLite wrapper for Flutter. Stores feed posts, cached business listings, saved places, draft posts, and queued uploads locally.</div>
+      <div class="sc-why">Offline-first is non-negotiable. Feed loads with no internet. Posts queue when connection drops.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Mapbox Flutter SDK</div>
+      <div class="sc-role">Maps & Location</div>
+      <div class="sc-desc">Native Mapbox SDK for Flutter. Renders custom Hapa-styled maps, handles offline tile caching, business pin clustering, and route display with true native performance.</div>
+      <div class="sc-why">Offline map tiles. Custom Hapa visual identity on maps. Works on 2G — Google Maps does not.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Geolocator + Background Location</div>
+      <div class="sc-role">Location Services</div>
+      <div class="sc-desc">Geolocator for foreground GPS. background_location package for city-switch detection when app is backgrounded. Platform-specific permissions handled gracefully with user-friendly explanations.</div>
+      <div class="sc-why">City-switch detection is the magic moment. Requires background location done right.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">1.2 — Key Flutter Architecture Principles</div>
+  <div class="two-col">
+    <div class="spec-box">
+      <span class="spec-box-label">Offline-First Strategy</span>
+      <ul class="spec-list">
+        <li>All feed reads hit SQLite cache first — network is a refresh, not a requirement</li>
+        <li>Post creation queues locally with UUID — uploads when connection returns</li>
+        <li>Business listings cached per city with 24-hour TTL</li>
+        <li>Mapbox tiles pre-cached for current city on wifi connection</li>
+        <li>Cultural Guide content for current city fully available offline</li>
+        <li>Connectivity package monitors connection state — UI adapts gracefully</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Performance Targets</span>
+      <ul class="spec-list">
+        <li>Cold start to feed: under 2.5 seconds on Tecno Spark (2GB RAM, Android 11)</li>
+        <li>Feed scroll: 60fps maintained. Zero jank tolerance.</li>
+        <li>Image load: WebP format, progressive loading, thumbnail-first</li>
+        <li>Map render: offline tiles load in under 1 second in current city</li>
+        <li>Location detection: city-level accuracy within 3 seconds of app open</li>
+        <li>Push notification delivery: under 500ms from server trigger to device display</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">1.3 — Business Web Dashboard: Next.js</div>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="sc-tech">Next.js 15</div>
+      <div class="sc-role">Web Framework</div>
+      <div class="sc-desc">React-based framework with App Router, server-side rendering, and built-in API routes. Powers the Hapa Business dashboard — analytics, Boost management, bookings, creator partnerships.</div>
+      <div class="sc-why">Business owners manage on desktop. SSR gives fast initial load. App Router handles complex dashboard routing cleanly.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">TypeScript</div>
+      <div class="sc-role">Language</div>
+      <div class="sc-desc">Strongly typed JavaScript across the entire web codebase. Shared type definitions with the backend API contract. Catches integration bugs at compile time not runtime.</div>
+      <div class="sc-why">Shared API types between Next.js dashboard and Go backend prevents silent contract breaks.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Recharts + Mapbox GL JS</div>
+      <div class="sc-role">Data Visualisation</div>
+      <div class="sc-desc">Recharts for business analytics charts — views, bookings, Boost performance. Mapbox GL JS for the business dashboard map showing their pin location, nearby user activity radius, and Boost reach.</div>
+      <div class="sc-why">Business owners need to see their reach visually. Numbers alone don't sell the value of upgrading.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 2: BACKEND ═══════════ -->
+<section class="chapter" id="backend">
+  <div class="chapter-header">
+    <div class="chapter-num">02</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Server Layer</div>
+      <div class="chapter-title">BACKEND <span class="hi">ARCHITECTURE</span></div>
+      <p class="chapter-sub">Go as the primary backend language. A modular monolith architecture with clear domain boundaries — designed for eventual microservice extraction without the distributed systems complexity that kills early-stage teams.</p>
+    </div>
+  </div>
+
+  <div class="principle">
+    <p>"// Don't build fifteen microservices on day one. Build a monolith that <br>// respects domain boundaries and can be split when traffic demands it."</p>
+    <div class="attr">// Architecture Principle</div>
+  </div>
+
+  <div class="sec-label">2.1 — Why Go</div>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="sc-tech">Concurrency</div>
+      <div class="sc-role">Goroutines + Channels</div>
+      <div class="sc-desc">Go's goroutine model handles thousands of concurrent location queries, feed requests, and WebSocket connections with minimal memory overhead. Each goroutine costs ~2KB vs ~1MB for an OS thread.</div>
+      <div class="sc-why">Hapa's peak load: thousands of users all querying "what's near me right now" simultaneously.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Performance</div>
+      <div class="sc-role">Compiled Binary</div>
+      <div class="sc-desc">Go compiles to a single static binary with no runtime dependencies. Cold starts in milliseconds on Cloud Run. CPU-efficient under geospatial query load that would bring a Node.js server to its knees.</div>
+      <div class="sc-why">PostGIS geospatial queries are CPU-intensive. Go handles the computation layer efficiently.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Simplicity</div>
+      <div class="sc-role">Explicit Over Magic</div>
+      <div class="sc-desc">Go has no hidden magic, no decorators, no complex ORM behaviour to debug. What you read is what runs. This dramatically reduces debugging time in a complex location-aware platform.</div>
+      <div class="sc-why">A small team maintaining a complex platform needs code that explains itself.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">2.2 — Domain Modules</div>
+  <div class="arch-layer">
+    <div class="arch-label"><span class="arch-label-name">Client Layer</span><span class="arch-label-sub">Mobile + Web</span></div>
+    <div class="arch-content">
+      <span class="arch-chip chip-cyan">Flutter App (iOS/Android)</span>
+      <span class="arch-chip chip-cyan">Next.js Business Dashboard</span>
+      <span class="arch-chip chip-cyan">REST API Calls</span>
+      <span class="arch-chip chip-cyan">WebSocket (Real-time)</span>
+    </div>
+  </div>
+  <div class="arch-arrow">↕ HTTPS / WSS</div>
+  <div class="arch-layer">
+    <div class="arch-label"><span class="arch-label-name">API Gateway</span><span class="arch-label-sub">Auth + Routing</span></div>
+    <div class="arch-content">
+      <span class="arch-chip chip-green">JWT Validation</span>
+      <span class="arch-chip chip-green">Rate Limiting</span>
+      <span class="arch-chip chip-green">Request Routing</span>
+      <span class="arch-chip chip-green">API Versioning (/v1/)</span>
+      <span class="arch-chip chip-green">CORS + SSL Termination</span>
+    </div>
+  </div>
+  <div class="arch-arrow">↕ Internal</div>
+  <div class="arch-layer">
+    <div class="arch-label"><span class="arch-label-name">Domain Modules</span><span class="arch-label-sub">Go Modular Monolith</span></div>
+    <div class="arch-content">
+      <span class="arch-chip chip-amber">Feed Service</span>
+      <span class="arch-chip chip-amber">Location Service</span>
+      <span class="arch-chip chip-amber">User & Auth Service</span>
+      <span class="arch-chip chip-amber">Content Service</span>
+      <span class="arch-chip chip-amber">Business Service</span>
+      <span class="arch-chip chip-amber">Creator Service</span>
+      <span class="arch-chip chip-amber">Notification Service</span>
+      <span class="arch-chip chip-amber">Recommendation Engine</span>
+      <span class="arch-chip chip-amber">Booking Service</span>
+      <span class="arch-chip chip-amber">Moderation Service</span>
+      <span class="arch-chip chip-amber">Payment Service</span>
+      <span class="arch-chip chip-amber">Search Service</span>
+    </div>
+  </div>
+  <div class="arch-arrow">↕ Database Layer</div>
+  <div class="arch-layer">
+    <div class="arch-label"><span class="arch-label-name">Data Layer</span><span class="arch-label-sub">Storage + Cache</span></div>
+    <div class="arch-content">
+      <span class="arch-chip chip-purple">PostgreSQL + PostGIS</span>
+      <span class="arch-chip chip-purple">Redis Cache</span>
+      <span class="arch-chip chip-purple">Meilisearch</span>
+      <span class="arch-chip chip-purple">Cloudflare R2 (Media)</span>
+      <span class="arch-chip chip-purple">Ably (WebSocket)</span>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">2.3 — API Design</div>
+  <div class="two-col">
+    <div class="spec-box">
+      <span class="spec-box-label">REST Endpoints — Core</span>
+      <ul class="spec-list">
+        <li>GET /v1/feed?lat=&lng=&radius= — location-filtered feed</li>
+        <li>POST /v1/posts — create location post with media</li>
+        <li>GET /v1/places?lat=&lng=&category=&radius= — business search</li>
+        <li>GET /v1/guide/:city — cultural guide for city</li>
+        <li>POST /v1/reviews — submit location-gated review</li>
+        <li>GET /v1/people?lat=&lng=&interests= — people discovery</li>
+        <li>POST /v1/bookings — create booking</li>
+        <li>POST /v1/flash — create time-sensitive post</li>
+        <li>GET /v1/recommendations?userId= — personalised recommendations</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Real-time WebSocket Events</span>
+      <ul class="spec-list">
+        <li>flash:new — new Flash post within user radius</li>
+        <li>flash:pulse — Flash reaches community threshold</li>
+        <li>place:users_here — live user count at a location</li>
+        <li>booking:confirmed — real-time booking confirmation</li>
+        <li>notification:push — server-side notification trigger</li>
+        <li>feed:refresh — new content available in current location</li>
+        <li>boost:nearby — business Boost within user radius</li>
+        <li>challenge:new — city challenge launched</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block">
+<span class="c-comment">// Example: Location-filtered feed query — Go handler</span>
+<span class="c-type">func</span> <span class="c-fn">GetFeed</span>(w http.ResponseWriter, r *http.Request) {
+    lat  := <span class="c-fn">parseFloat</span>(r.URL.Query().Get(<span class="c-str">"lat"</span>))
+    lng  := <span class="c-fn">parseFloat</span>(r.URL.Query().Get(<span class="c-str">"lng"</span>))
+    uid  := <span class="c-fn">getAuthUser</span>(r)
+
+    <span class="c-comment">// 1. Check Redis cache for pre-computed feed (city:lat_lng bucket)</span>
+    cached := redis.<span class="c-fn">GetFeed</span>(lat, lng, uid)
+    <span class="c-key">if</span> cached != <span class="c-key">nil</span> {
+        <span class="c-fn">writeJSON</span>(w, cached); <span class="c-key">return</span>
+    }
+
+    <span class="c-comment">// 2. PostGIS geospatial query with behavioural ranking</span>
+    posts := db.<span class="c-fn">QueryFeed</span>(<span class="c-str">`
+        SELECT p.*, ST_Distance(p.location, ST_Point($1,$2)) as dist
+        FROM posts p
+        WHERE ST_DWithin(p.location, ST_Point($1,$2)::geography, $3)
+          AND p.created_at > NOW() - INTERVAL '48 hours'
+          AND p.moderation_status = 'approved'
+        ORDER BY (dist * 0.4) + (recency_score * 0.35) +
+                 (behaviour_match($4, p.interest_tags) * 0.25)
+        LIMIT 40
+    `</span>, lat, lng, radius, uid)
+
+    <span class="c-comment">// 3. Cache result, serve response</span>
+    redis.<span class="c-fn">SetFeed</span>(lat, lng, uid, posts, <span class="c-num">300</span>) <span class="c-comment">// 5min TTL</span>
+    <span class="c-fn">writeJSON</span>(w, posts)
+}
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 3: DATABASE ═══════════ -->
+<section class="chapter" id="database">
+  <div class="chapter-header">
+    <div class="chapter-num">03</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Data Layer</div>
+      <div class="chapter-title">DATABASE <span class="hi">ARCHITECTURE</span></div>
+      <p class="chapter-sub">PostgreSQL with PostGIS is the foundation. Every other data store exists because PostgreSQL is the wrong tool for that specific job. No database is added without a clear, justified reason.</p>
+    </div>
+  </div>
+
+  <div class="sec-label">3.1 — Primary Store: PostgreSQL + PostGIS</div>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="sc-tech">PostgreSQL 16</div>
+      <div class="sc-role">Primary Database</div>
+      <div class="sc-desc">ACID-compliant relational database for all structured data. Users, businesses, posts, reviews, bookings, creator partnerships, payments, moderation logs. The single source of truth.</div>
+      <div class="sc-why">ACID transactions for bookings and payments. Proven reliability. Best ecosystem for PostGIS.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">PostGIS Extension</div>
+      <div class="sc-role">Geospatial Engine</div>
+      <div class="sc-desc">Adds geographic object support to PostgreSQL. Enables: "find all businesses within 500m of this coordinate", distance-sorted feed queries, polygon-based neighbourhood filtering, and radius-based Boost targeting.</div>
+      <div class="sc-why">Hapa's entire recommendation and discovery model runs on geospatial queries. PostGIS is the engine.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Redis 7</div>
+      <div class="sc-role">Cache + Feed Store</div>
+      <div class="sc-desc">Pre-computed feed buckets per location grid cell. User session tokens. Like/Been Here counts. Flash post real-time state. Rate limiting counters. Leaderboard data for local reputation scores.</div>
+      <div class="sc-why">Feed requests hit Redis in microseconds. PostgreSQL for feed queries at scale would be too slow.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">3.2 — Core Schema Design</div>
+  <div class="code-block">
+<span class="c-comment">-- PostGIS enabled</span>
+<span class="c-fn">CREATE EXTENSION</span> postgis;
+
+<span class="c-comment">-- Users table</span>
+<span class="c-fn">CREATE TABLE</span> users (
+    id              UUID <span class="c-fn">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    phone           <span class="c-type">VARCHAR(20) UNIQUE NOT NULL</span>,
+    display_name    <span class="c-type">VARCHAR(80)</span>,
+    avatar_url      <span class="c-type">TEXT</span>,
+    user_type       <span class="c-type">VARCHAR(20)</span>, <span class="c-comment">-- resident|traveller|new_arrival|business_owner</span>
+    language        <span class="c-type">VARCHAR(10) DEFAULT</span> <span class="c-str">'en'</span>,
+    privacy_mode    <span class="c-type">VARCHAR(20) DEFAULT</span> <span class="c-str">'discoverable'</span>,
+    created_at      <span class="c-type">TIMESTAMPTZ DEFAULT</span> NOW()
+);
+
+<span class="c-comment">-- User location history (anonymised)</span>
+<span class="c-fn">CREATE TABLE</span> user_locations (
+    id          UUID <span class="c-fn">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    user_id     UUID <span class="c-fn">REFERENCES</span> users(id),
+    city        <span class="c-type">VARCHAR(100)</span>,
+    neighbourhood <span class="c-type">VARCHAR(100)</span>,
+    location    <span class="c-type">GEOGRAPHY(POINT, 4326)</span>, <span class="c-comment">-- PostGIS point</span>
+    recorded_at <span class="c-type">TIMESTAMPTZ DEFAULT</span> NOW()
+);
+<span class="c-fn">CREATE INDEX</span> idx_user_locations_geo <span class="c-fn">ON</span> user_locations <span class="c-fn">USING GIST</span>(location);
+
+<span class="c-comment">-- Posts table</span>
+<span class="c-fn">CREATE TABLE</span> posts (
+    id              UUID <span class="c-fn">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    user_id         UUID <span class="c-fn">REFERENCES</span> users(id),
+    post_type       <span class="c-type">VARCHAR(30)</span>, <span class="c-comment">-- location_post|flash|review|cultural_note|diary|ask|reel</span>
+    content         <span class="c-type">TEXT</span>,
+    media_urls      <span class="c-type">TEXT[]</span>,
+    location        <span class="c-type">GEOGRAPHY(POINT, 4326) NOT NULL</span>,
+    city            <span class="c-type">VARCHAR(100)</span>,
+    neighbourhood   <span class="c-type">VARCHAR(100)</span>,
+    business_id     UUID <span class="c-fn">REFERENCES</span> businesses(id) <span class="c-fn">ON DELETE SET NULL</span>,
+    interest_tags   <span class="c-type">TEXT[]</span>,
+    expires_at      <span class="c-type">TIMESTAMPTZ</span>, <span class="c-comment">-- for Flash posts</span>
+    moderation_status <span class="c-type">VARCHAR(20) DEFAULT</span> <span class="c-str">'approved'</span>,
+    been_here_count <span class="c-type">INTEGER DEFAULT 0</span>,
+    created_at      <span class="c-type">TIMESTAMPTZ DEFAULT</span> NOW()
+);
+<span class="c-fn">CREATE INDEX</span> idx_posts_location <span class="c-fn">ON</span> posts <span class="c-fn">USING GIST</span>(location);
+<span class="c-fn">CREATE INDEX</span> idx_posts_city <span class="c-fn">ON</span> posts(city, created_at <span class="c-fn">DESC</span>);
+
+<span class="c-comment">-- Businesses table</span>
+<span class="c-fn">CREATE TABLE</span> businesses (
+    id              UUID <span class="c-fn">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    owner_id        UUID <span class="c-fn">REFERENCES</span> users(id),
+    name            <span class="c-type">VARCHAR(120) NOT NULL</span>,
+    category        <span class="c-type">VARCHAR(50)</span>,
+    sub_category    <span class="c-type">VARCHAR(50)</span>,
+    description     <span class="c-type">VARCHAR(300)</span>,
+    location        <span class="c-type">GEOGRAPHY(POINT, 4326) NOT NULL</span>,
+    city            <span class="c-type">VARCHAR(100)</span>,
+    phone           <span class="c-type">VARCHAR(20)</span>,
+    cover_url       <span class="c-type">TEXT</span>,
+    gallery_urls    <span class="c-type">TEXT[]</span>,
+    opening_hours   <span class="c-type">JSONB</span>,
+    tier            <span class="c-type">VARCHAR(20) DEFAULT</span> <span class="c-str">'free'</span>,
+    verified        <span class="c-type">BOOLEAN DEFAULT FALSE</span>,
+    rating_avg      <span class="c-type">NUMERIC(3,2)</span>,
+    review_count    <span class="c-type">INTEGER DEFAULT 0</span>,
+    created_at      <span class="c-type">TIMESTAMPTZ DEFAULT</span> NOW()
+);
+<span class="c-fn">CREATE INDEX</span> idx_businesses_location <span class="c-fn">ON</span> businesses <span class="c-fn">USING GIST</span>(location);
+<span class="c-fn">CREATE INDEX</span> idx_businesses_city_category <span class="c-fn">ON</span> businesses(city, category);
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">3.3 — Supporting Data Stores</div>
+  <div class="two-col">
+    <div class="spec-box">
+      <span class="spec-box-label">Meilisearch — Search Engine</span>
+      <ul class="spec-list">
+        <li>Powers all user-facing search: "suya near me", "mechanic Surulere", "hotel under 50k"</li>
+        <li>Typo-tolerant — "resturant" finds "restaurant". Critical for multilingual users.</li>
+        <li>Instant search — results appear as user types. No submit button.</li>
+        <li>Faceted filtering by category, price range, rating, distance</li>
+        <li>Synced from PostgreSQL via event-driven pipeline — search index always fresh</li>
+        <li>Handles Swahili, Yoruba, Luganda tokenisation better than Elasticsearch out-of-box</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Redis Data Structures in Use</span>
+      <ul class="spec-list">
+        <li>Sorted Sets — feed ranking per location grid cell (GeoHash bucketing)</li>
+        <li>Hashes — user session data, JWT refresh tokens</li>
+        <li>Counters — been_here counts, flash pulse counts, like counts (synced to PG hourly)</li>
+        <li>Lists — notification queues per user</li>
+        <li>Sets — user follower/following IDs (fast intersection for feed filtering)</li>
+        <li>Pub/Sub — real-time event distribution to WebSocket connections</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">3.4 — Key PostGIS Queries</div>
+  <div class="code-block">
+<span class="c-comment">-- Find all businesses within 1km of user, sorted by distance + rating</span>
+<span class="c-fn">SELECT</span> b.*,
+    ST_Distance(b.location, ST_Point(<span class="c-num">32.5825</span>, <span class="c-num">0.3476</span>)::geography) <span class="c-key">AS</span> distance_m
+<span class="c-fn">FROM</span> businesses b
+<span class="c-fn">WHERE</span> ST_DWithin(
+    b.location,
+    ST_Point(<span class="c-num">32.5825</span>, <span class="c-num">0.3476</span>)::geography,
+    <span class="c-num">1000</span>  <span class="c-comment">-- 1000 metres</span>
+)
+<span class="c-fn">AND</span> b.category = <span class="c-str">'food_dining'</span>
+<span class="c-fn">ORDER BY</span> (distance_m * <span class="c-num">0.4</span>) + ((5 - b.rating_avg) * <span class="c-num">200</span>) <span class="c-comment">-- distance + rating blend</span>
+<span class="c-fn">LIMIT</span> <span class="c-num">20</span>;
+
+<span class="c-comment">-- Detect if user has moved cities (for context switch trigger)</span>
+<span class="c-fn">SELECT</span> city, <span class="c-fn">COUNT</span>(*) <span class="c-key">AS</span> pings
+<span class="c-fn">FROM</span> user_locations
+<span class="c-fn">WHERE</span> user_id = <span class="c-str">$1</span>
+  <span class="c-fn">AND</span> recorded_at > NOW() - <span class="c-fn">INTERVAL</span> <span class="c-str">'30 minutes'</span>
+<span class="c-fn">GROUP BY</span> city
+<span class="c-fn">ORDER BY</span> pings <span class="c-fn">DESC</span>
+<span class="c-fn">LIMIT</span> <span class="c-num">1</span>;
+<span class="c-comment">-- If result.city != user.current_city → trigger context switch</span>
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 4: LOCATION ═══════════ -->
+<section class="chapter" id="location">
+  <div class="chapter-header">
+    <div class="chapter-num">04</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Geospatial Layer</div>
+      <div class="chapter-title">LOCATION <span class="hi">INFRASTRUCTURE</span></div>
+      <p class="chapter-sub">Location is Hapa's core product. The geospatial stack must be fast, battery-efficient, accurate enough to serve recommendations but not so precise it becomes surveillance. Every design choice reflects that balance.</p>
+    </div>
+  </div>
+
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="sc-tech">Mapbox</div>
+      <div class="sc-role">Maps & Tiles</div>
+      <div class="sc-desc">Custom Hapa map style. Offline tile caching for current city. Business pin clustering at zoom levels. Route display for navigation. Significantly faster than Google Maps on low-end Android.</div>
+      <div class="sc-why">Offline tiles work on 2G. Custom visual identity. 40% cheaper than Google Maps at scale.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">OpenStreetMap + Pelias</div>
+      <div class="sc-role">Geocoding</div>
+      <div class="sc-desc">Self-hosted Pelias geocoder using OpenStreetMap data. Converts GPS coordinates to city/neighbourhood names. OSM has dramatically better coverage of African informal settlement names than Google.</div>
+      <div class="sc-why">Google Geocoding returns "Unnamed Road" in Kibera. OSM returns "Kibera, Nairobi" with neighbourhood detail.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">GeoHash Bucketing</div>
+      <div class="sc-role">Feed Partitioning</div>
+      <div class="sc-desc">The city is divided into GeoHash grid cells (~1.2km × 0.6km). Feed content is pre-computed per cell and cached in Redis. Users in the same cell share a feed cache — dramatically reducing database load at scale.</div>
+      <div class="sc-why">Without bucketing, every user location query hits PostgreSQL independently. With it, one cache serves thousands of users in the same area.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">4.1 — Location Signal Processing</div>
+  <div class="spec-box">
+    <span class="spec-box-label">GPS Smoothing Pipeline</span>
+    <ul class="spec-list">
+      <li>Raw GPS signals are noisy — a stationary user shows slightly different coordinates every few seconds. A Kalman filter smooths this before any data touches the database.</li>
+      <li>City-level accuracy is all Hapa needs for feed filtering. Neighbourhood-level for Boost targeting. Precise coordinates only for business pin proximity checks.</li>
+      <li>Location updates sent to server maximum every 90 seconds while app is open — not continuously. Protects user battery and mobile data budget.</li>
+      <li>Background location pings every 15 minutes at city-level granularity only — enough to detect a city switch, not enough to track movement within a city.</li>
+      <li>Location data older than 90 days is automatically purged from user_locations table via scheduled PostgreSQL job.</li>
+    </ul>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">4.2 — City Switch Detection Flow</div>
+  <div class="code-block">
+<span class="c-comment">// City switch detection — runs on background location ping</span>
+<span class="c-fn">func</span> <span class="c-fn">CheckCitySwitch</span>(userID string, newLat, newLng <span class="c-type">float64</span>) {
+    currentCity := cache.<span class="c-fn">GetUserCity</span>(userID)
+    detectedCity := geocoder.<span class="c-fn">CityFromCoords</span>(newLat, newLng)
+
+    <span class="c-key">if</span> detectedCity != currentCity {
+        <span class="c-comment">// Confirm with 3 consecutive pings before triggering</span>
+        count := cache.<span class="c-fn">IncrCityPingCount</span>(userID, detectedCity)
+
+        <span class="c-key">if</span> count >= <span class="c-num">3</span> {
+            db.<span class="c-fn">UpdateUserCity</span>(userID, detectedCity)
+            cache.<span class="c-fn">InvalidateUserFeed</span>(userID)
+            notifications.<span class="c-fn">Send</span>(userID, <span class="c-fn">CitySwitchNotification</span>(detectedCity))
+            events.<span class="c-fn">Publish</span>(<span class="c-str">"user.city_switched"</span>, userID, detectedCity)
+        }
+    }
+}
+<span class="c-comment">// 3-ping confirmation prevents false triggers during transit through a city</span>
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 5: AI & ML ═══════════ -->
+<section class="chapter" id="ai">
+  <div class="chapter-header">
+    <div class="chapter-num">05</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Intelligence Layer</div>
+      <div class="chapter-title">AI <span class="hi">&</span> ML STACK</div>
+      <p class="chapter-sub">Three distinct AI concerns. The conversational layer that answers natural language queries. The recommendation engine that anticipates behaviour. The moderation layer that protects the community. Each has different requirements and different tools.</p>
+    </div>
+  </div>
+
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="sc-tech">Claude API</div>
+      <div class="sc-role">Conversational AI</div>
+      <div class="sc-desc">Powers Hapa's natural language query layer. "Find me a hotel near me under 50,000 UGX with a generator." Claude interprets the query, retrieves structured data from PostgreSQL, ranks results, and returns a conversational response with booking links.</div>
+      <div class="sc-why">Multilingual. Handles African context nuance. Understands currencies, local references, and conversational phrasing that rigid search cannot.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Python + scikit-learn</div>
+      <div class="sc-role">Recommendation Engine</div>
+      <div class="sc-desc">Behavioural recommendation pipeline. Collaborative filtering on user-location-content interaction matrix. Time-of-day models. Interest-to-business affinity scoring. Runs as a separate Python service, results stored in Redis for fast retrieval.</div>
+      <div class="sc-why">Python has the richest ML ecosystem. Separate service means it can be scaled or replaced independently of the Go backend.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Google Vision + BERT</div>
+      <div class="sc-role">Content Moderation AI</div>
+      <div class="sc-desc">Google Cloud Vision API for image moderation — inappropriate content detected before publish. Fine-tuned multilingual BERT model for text moderation in English, Swahili, Yoruba, and Luganda. Runs async — content publishes optimistically and is removed if flagged.</div>
+      <div class="sc-why">Synchronous moderation kills posting UX. Async moderation with instant optimistic publish feels fast. Most content is fine. Bad content is caught within seconds.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">5.1 — Conversational AI Architecture (RAG)</div>
+  <div class="code-block">
+<span class="c-comment">// Hapa AI Query Flow — Retrieval-Augmented Generation</span>
+<span class="c-comment">// User asks: "Best affordable hotel near me with a generator, Kampala"</span>
+
+<span class="c-comment">// Step 1: Parse intent and extract structured filters</span>
+intent := claude.<span class="c-fn">ParseQuery</span>(userQuery, userLocation, userLanguage)
+<span class="c-comment">// → { category: "accommodation", maxPrice: "budget",</span>
+<span class="c-comment">//     amenities: ["generator"], city: "Kampala", radius: 2000 }</span>
+
+<span class="c-comment">// Step 2: Query PostgreSQL with extracted filters</span>
+results := db.<span class="c-fn">SearchBusinesses</span>(intent)
+<span class="c-comment">// → [ {name: "City View Hotel", rating: 4.2, price: "budget",</span>
+<span class="c-comment">//       amenities: ["generator", "wifi"], distance_m: 340}, ... ]</span>
+
+<span class="c-comment">// Step 3: Pass results to Claude for natural language response</span>
+response := claude.<span class="c-fn">FormatResponse</span>({
+    query:   userQuery,
+    results: results,
+    context: <span class="c-str">"User is in Kampala. Prefer warm, local tone. Currency: UGX."</span>,
+})
+<span class="c-comment">// → "City View Hotel is your best bet — 340m away, they have a generator</span>
+<span class="c-comment">//    and WiFi, and reviews call it great value. Want me to book it?"</span>
+
+<span class="c-comment">// Step 4: Attach booking CTA and return to user</span>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">5.2 — Recommendation Engine Pipeline</div>
+  <div class="two-col">
+    <div class="spec-box">
+      <span class="spec-box-label">Input Signals (per user)</span>
+      <ul class="spec-list">
+        <li>Posts interacted with — type, location, time of day, day of week</li>
+        <li>Businesses visited (proximity inferred from location history)</li>
+        <li>Search queries — keywords and categories</li>
+        <li>Been Here confirmations — highest-quality positive signal</li>
+        <li>Creator follows — their content preferences by proxy</li>
+        <li>Community circles joined — explicit interest declaration</li>
+        <li>Notification opens vs dismissals — content relevance feedback</li>
+        <li>Time-of-day activity patterns — when are they most active</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Output — Ranked Recommendation Sets</span>
+      <ul class="spec-list">
+        <li>Feed ranking weights — personalised per user, refreshed every 6 hours</li>
+        <li>Predictive notification content — what to send and when</li>
+        <li>People discovery ranking — who to surface in Hapa People</li>
+        <li>Business discovery boost — which businesses to surface above standard placement</li>
+        <li>Creator discovery — which local creators match this user's profile</li>
+        <li>Challenge relevance — which city challenges this user is likely to participate in</li>
+        <li>Cross-city preload — if user regularly travels, pre-cache recommendations for likely destinations</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 6: INFRASTRUCTURE ═══════════ -->
+<section class="chapter" id="infra">
+  <div class="chapter-header">
+    <div class="chapter-num">06</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Cloud & DevOps</div>
+      <div class="chapter-title">INFRASTRUCTURE <span class="hi">& DEVOPS</span></div>
+      <p class="chapter-sub">GCP Johannesburg region as primary. Cloudflare for CDN and media. Cloud Run for early-stage auto-scaling. GKE when traffic justifies the operational complexity. CI/CD from day one.</p>
+    </div>
+  </div>
+
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="sc-tech">GCP — Johannesburg</div>
+      <div class="sc-role">Primary Cloud Region</div>
+      <div class="sc-desc">Google Cloud Platform's Africa South 1 region (Johannesburg). Lowest latency to East and West African users of any major cloud provider. PostgreSQL on Cloud SQL, Go services on Cloud Run, ML pipeline on Vertex AI.</div>
+      <div class="sc-why">Latency from Johannesburg to Kampala: ~40ms. From Europe: ~200ms. That difference is felt in every API call.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Cloud Run → GKE</div>
+      <div class="sc-role">Container Orchestration</div>
+      <div class="sc-desc">Cloud Run for v1 — serverless containers that scale to zero at night and handle traffic spikes automatically. Migrate to GKE (Kubernetes) when stateful services and inter-service communication requires it. No Kubernetes complexity until it's earned.</div>
+      <div class="sc-why">Cloud Run at low traffic costs near-zero. Handles African peak hours (evenings/weekends) automatically without pre-provisioning.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Cloudflare R2 + CDN</div>
+      <div class="sc-role">Media & CDN</div>
+      <div class="sc-desc">All user media (photos, videos, profile images) stored in Cloudflare R2. Served via Cloudflare's CDN — one of the strongest network presences in Africa. Images auto-compressed to WebP. Videos transcoded to adaptive bitrate for 2G compatibility.</div>
+      <div class="sc-why">A photo post in Lagos reaching a user in Kampala should load in under 1 second. Only possible with African CDN PoPs.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Ably</div>
+      <div class="sc-role">Real-time WebSockets</div>
+      <div class="sc-desc">Managed WebSocket infrastructure for real-time features: Flash post alerts, live "users here" counts, instant booking confirmations, notification delivery. Ably has African edge servers reducing WebSocket latency.</div>
+      <div class="sc-why">Building and scaling a custom WebSocket server is expensive engineering time. Ably handles it and is cheaper than the engineering cost of alternatives.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">GitHub Actions</div>
+      <div class="sc-role">CI/CD Pipeline</div>
+      <div class="sc-desc">Automated testing, linting, and deployment on every push. Go backend: unit tests + integration tests against test PostgreSQL instance. Flutter: widget tests + integration tests on emulator. Deployment to Cloud Run on merge to main.</div>
+      <div class="sc-why">Shipping broken code to African users who paid data to download an update is unacceptable. CI catches regressions before they ship.</div>
+    </div>
+    <div class="stack-card">
+      <div class="sc-tech">Sentry + Grafana</div>
+      <div class="sc-role">Monitoring & Observability</div>
+      <div class="sc-desc">Sentry for error tracking in both Flutter app and Go backend — with African user context (device model, OS version, network type) attached to every error. Grafana dashboards for API latency, database query performance, and location service accuracy metrics.</div>
+      <div class="sc-why">A crash on a Tecno device running Android 10 must surface differently from a crash on iPhone 15. Device context is critical for African market debugging.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">6.1 — Media Processing Pipeline</div>
+  <div class="spec-box">
+    <span class="spec-box-label">Image & Video Pipeline</span>
+    <ul class="spec-list">
+      <li>User uploads image → Flutter compresses client-side to max 800KB before upload — saves mobile data</li>
+      <li>Server receives → Cloud Run worker converts to WebP format (30–50% smaller than JPEG at same quality)</li>
+      <li>Three sizes generated: thumbnail (150px), feed (600px), full (1200px) — served based on network speed</li>
+      <li>Video uploads → transcoded to HLS adaptive bitrate: 360p for 2G, 720p for 3G+, 1080p for WiFi</li>
+      <li>All media served through Cloudflare CDN with aggressive caching headers (1 year TTL)</li>
+      <li>Content-addressed storage — identical images stored once, served via hash-based URLs</li>
+    </ul>
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 7: PAYMENTS ═══════════ -->
+<section class="chapter" id="payments">
+  <div class="chapter-header">
+    <div class="chapter-num">07</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Financial Layer</div>
+      <div class="chapter-title">PAYMENTS <span class="hi">& MOBILE MONEY</span></div>
+      <p class="chapter-sub">Stripe is not the answer for Africa. Mobile money is. Every payment decision is made around the reality that M-Pesa, MTN MoMo, and Airtel Money are how the majority of Hapa's users and business owners transact.</p>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="stack-card" style="background:var(--bg2);border:1px solid var(--border);padding:1.8rem;">
+      <div class="sc-tech">Flutterwave</div>
+      <div class="sc-role">Primary Payment Aggregator</div>
+      <div class="sc-desc">Handles M-Pesa (Kenya), MTN MoMo (Uganda/Ghana/Rwanda), Airtel Money (Uganda/Tanzania/Zambia), Zamtel, Orange Money, and card payments across 34 African countries through a single API. Primary choice for pan-African coverage.</div>
+      <div class="sc-why">Single integration covers all East and West African mobile money. Critical for Hapa Boost payments and creator payouts.</div>
+    </div>
+    <div class="stack-card" style="background:var(--bg2);border:1px solid var(--border);padding:1.8rem;">
+      <div class="sc-tech">Paystack</div>
+      <div class="sc-role">Secondary / Nigeria-First</div>
+      <div class="sc-desc">Strongest presence in Nigeria with the cleanest API. Used as primary processor for Nigerian market (Lagos, Abuja, Port Harcourt) where Paystack has deepest bank and mobile money integration. Secondary fallback for other markets.</div>
+      <div class="sc-why">Nigeria is Hapa's largest single-country market. Paystack's Nigeria coverage is unmatched. Dual integration reduces single-point-of-failure risk.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">7.1 — Payment Flows</div>
+  <div class="three-col">
+    <div class="spec-box">
+      <span class="spec-box-label">User Payments (Inbound)</span>
+      <ul class="spec-list">
+        <li>Hapa Pro subscription — mobile money monthly recurring or card</li>
+        <li>In-app hotel/restaurant booking — mobile money preferred, card fallback</li>
+        <li>Creator subscription — fan pays creator monthly fee via mobile money</li>
+        <li>Tipping creators — one-tap mobile money tip from content</li>
+        <li>All payments confirmed via webhook before service activates</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Business Payments (Inbound)</span>
+      <ul class="spec-list">
+        <li>Monthly listing fees — auto-debit from registered mobile money account</li>
+        <li>Hapa Boost purchases — pay-per-push, mobile money or card</li>
+        <li>Booking commissions — deducted from booking payment before remittance</li>
+        <li>Creator partnership fees — brokered through platform, deducted at source</li>
+        <li>Invoices sent via WhatsApp for businesses on monthly billing</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Creator & Business Payouts (Outbound)</span>
+      <ul class="spec-list">
+        <li>Creator Fund distributions — weekly, mobile money or bank transfer</li>
+        <li>Business booking remittances — net of commission, weekly settlement</li>
+        <li>Partnership deal payments — released on completion confirmation</li>
+        <li>Minimum payout threshold: 10,000 UGX / 500 KES / 500 NGN</li>
+        <li>Payout via Flutterwave Transfers API — same rails as collection</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 8: SECURITY ═══════════ -->
+<section class="chapter" id="security">
+  <div class="chapter-header">
+    <div class="chapter-num">08</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Security Layer</div>
+      <div class="chapter-title">SECURITY <span class="hi">ARCHITECTURE</span></div>
+      <p class="chapter-sub">Location data is the most sensitive data Hapa holds. Security is not a feature — it is the foundation. A breach of location data is not just a technical failure. It is a betrayal of user trust that cannot be recovered from.</p>
+    </div>
+  </div>
+
+  <div class="sec-grid">
+    <div class="sec-card">
+      <h4>Authentication</h4>
+      <ul>
+        <li>Phone number + OTP as primary auth. No passwords stored.</li>
+        <li>JWT access tokens (15-minute expiry) + refresh tokens (30-day expiry) stored in secure storage on device</li>
+        <li>Refresh token rotation — every use issues a new refresh token. Old one invalidated.</li>
+        <li>Device fingerprinting — new device login triggers OTP re-verification</li>
+        <li>Rate limiting on OTP requests — max 3 per phone per hour, exponential backoff</li>
+        <li>Google OAuth as secondary path — token verified server-side, never trusted client-side</li>
+      </ul>
+    </div>
+    <div class="sec-card">
+      <h4>Location Data Protection</h4>
+      <ul>
+        <li>Precise coordinates never exposed to other users via API — city and neighbourhood only</li>
+        <li>Location history stored encrypted at rest in PostgreSQL (pgcrypto extension)</li>
+        <li>Location data purged after 90 days via automated pg_cron job</li>
+        <li>Background location requires explicit separate permission — not bundled with foreground</li>
+        <li>GPS smoothing applied before storage — no raw coordinate sequences stored</li>
+        <li>Data access logs for all location table queries — auditable trail</li>
+      </ul>
+    </div>
+    <div class="sec-card">
+      <h4>API Security</h4>
+      <ul>
+        <li>All endpoints require valid JWT — no unauthenticated data access</li>
+        <li>Rate limiting per user per endpoint — prevents abuse and scraping</li>
+        <li>Request signing for sensitive operations (bookings, payments)</li>
+        <li>Input validation and parameterised queries everywhere — SQL injection impossible</li>
+        <li>HTTPS only — no HTTP fallback. HSTS enforced.</li>
+        <li>API versioning — breaking changes never affect live clients silently</li>
+      </ul>
+    </div>
+    <div class="sec-card">
+      <h4>Payment Security</h4>
+      <ul>
+        <li>Hapa never stores card numbers — Flutterwave/Paystack tokenise at point of entry</li>
+        <li>Mobile money transactions verified via webhook signature (HMAC-SHA256)</li>
+        <li>Payment amounts verified server-side before any service activation — never trust client</li>
+        <li>Idempotency keys on all payment requests — duplicate charges impossible</li>
+        <li>Suspicious payment patterns flagged for manual review</li>
+        <li>PCI DSS compliance delegated entirely to Flutterwave and Paystack</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════ CHAPTER 9: BUILD ROADMAP ═══════════ -->
+<section class="chapter" id="roadmap">
+  <div class="chapter-header">
+    <div class="chapter-num">09</div>
+    <div class="chapter-meta">
+      <div class="chapter-label">// Build Sequence</div>
+      <div class="chapter-title">TECHNICAL <span class="hi">ROADMAP</span></div>
+      <p class="chapter-sub">Scope the v1 ruthlessly. Build the right foundation. Layer complexity only when the previous layer is stable and proven. Every phase has a clear "done" definition before the next one starts.</p>
+    </div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-box">
+      <span class="metric-num">4</span>
+      <span class="metric-label">Months to<br>v1 Launch</span>
+    </div>
+    <div class="metric-box">
+      <span class="metric-num">3</span>
+      <span class="metric-label">Flutter Devs<br>Minimum Team</span>
+    </div>
+    <div class="metric-box">
+      <span class="metric-num">2</span>
+      <span class="metric-label">Go Backend<br>Engineers</span>
+    </div>
+    <div class="metric-box">
+      <span class="metric-num">1</span>
+      <span class="metric-label">City at<br>Launch</span>
+    </div>
+  </div>
+
+  <div class="phase-stack">
+    <div class="phase-row">
+      <div class="phase-left">
+        <div class="phase-num">// Phase 01</div>
+        <div class="phase-name">FOUNDATION</div>
+        <div class="phase-time">Months 1–2</div>
+      </div>
+      <div class="phase-mid">
+        <p>PostgreSQL + PostGIS setup on Cloud SQL. Go backend scaffolding with auth module. Flutter app skeleton with navigation shell, location permission flow, and offline SQLite setup. Mapbox map integrated with Kampala tile set downloaded. User registration flow complete end-to-end. Basic feed display from seeded data. No real-time yet.</p>
+      </div>
+      <div class="phase-right">
+        <div class="r-label">Done When</div>
+        <div class="r-val">A real user in Kampala can register, see a location-filtered feed, and the app works offline.</div>
+      </div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-left">
+        <div class="phase-num">// Phase 02</div>
+        <div class="phase-name">CONTENT</div>
+        <div class="phase-time">Months 2–3</div>
+      </div>
+      <div class="phase-mid">
+        <p>Location Post creation with photo upload (Cloudflare R2). Hapa Flash with expiry logic. Business registration flow and Hapa Places map. Basic search via Meilisearch. Push notifications via FCM. Community Ask format. Redis cache for feed. Image compression pipeline. Content moderation via Google Vision (images only at this stage).</p>
+      </div>
+      <div class="phase-right">
+        <div class="r-label">Done When</div>
+        <div class="r-val">Users can post, businesses can list, search works, push notifications deliver reliably.</div>
+      </div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-left">
+        <div class="phase-num">// Phase 03</div>
+        <div class="phase-name">SOCIAL & AI</div>
+        <div class="phase-time">Months 3–4</div>
+      </div>
+      <div class="phase-mid">
+        <p>Follow system and social graph. Hapa People discovery. City switch detection and context switching. Claude API integration for conversational search. Hapa Guide content layer. In-app booking flow with Flutterwave mobile money. Creator application system. Ably WebSocket integration for real-time Flash alerts and live user counts.</p>
+      </div>
+      <div class="phase-right">
+        <div class="r-label">Done When</div>
+        <div class="r-val">A traveller arriving in Kampala gets a cultural briefing, finds a hotel via AI, books it with mobile money, and sees a Flash alert about tonight's event.</div>
+      </div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-left">
+        <div class="phase-num">// Phase 04</div>
+        <div class="phase-name">INTELLIGENCE</div>
+        <div class="phase-time">Month 4+</div>
+      </div>
+      <div class="phase-mid">
+        <p>Recommendation engine (Python service). Predictive notifications. Hapa Boost business promotion system. Creator analytics dashboard. Next.js business web dashboard. Local reputation scoring. Hapa Circles. City Challenges. Been Here mechanic. Neighbourhood Diaries and Curated Maps. Hapa Reels video support. Multi-city expansion preparation.</p>
+      </div>
+      <div class="phase-right">
+        <div class="r-label">Done When</div>
+        <div class="r-val">Hapa moves before users move. Notifications feel like magic. Businesses see measurable ROI from their listing.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sec-label">9.1 — Minimum Team to Ship v1</div>
+  <div class="three-col">
+    <div class="spec-box">
+      <span class="spec-box-label">Mobile (Flutter)</span>
+      <ul class="spec-list">
+        <li>2–3 Flutter engineers (Dart, mobile APIs, offline-first patterns)</li>
+        <li>1 UI/UX designer with mobile-first African market experience</li>
+        <li>Flutter experience with Mapbox SDK preferred — not required</li>
+        <li>Strong understanding of low-end Android optimisation</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Backend (Go)</span>
+      <ul class="spec-list">
+        <li>1–2 Go engineers (REST APIs, PostgreSQL, Redis)</li>
+        <li>PostGIS experience a strong advantage — can be learned</li>
+        <li>DevOps handled by backend team initially (GCP Cloud Run is low-ops)</li>
+        <li>Python ML engineer joins at Phase 04 for recommendation engine</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <span class="spec-box-label">Community & QA</span>
+      <ul class="spec-list">
+        <li>1 community manager in Kampala — seeds content, recruits founding locals, tests app daily on real devices</li>
+        <li>QA must be done on actual Tecno/Infinix devices — not emulators</li>
+        <li>Real SIM cards with M-Pesa / MTN MoMo for payment testing</li>
+        <li>2G throttling tests mandatory before every release</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div><!-- /page -->
+
+<footer>
+  <div>
+    <div class="footer-logo">HAPA</div>
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.57rem; color:var(--text-dim); margin-top:0.4rem; letter-spacing:0.1em;">Technical Architecture — Version 1.0</div>
+  </div>
+  <div class="footer-info">
+    <div>Flutter · Go · PostgreSQL + PostGIS · Redis · GCP Johannesburg · Cloudflare · Flutterwave</div>
+    <div style="margin-top:0.3rem; opacity:0.4;">hapa.world · 2026 · Built for Africa. Built to Scale.</div>
+  </div>
+</footer>
+
+</body>
+</html>

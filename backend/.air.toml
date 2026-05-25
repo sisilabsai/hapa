@@ -1,0 +1,15 @@
+[build]
+  cmd = "go build -o ./tmp/hapa-api ./cmd/api"
+  bin = "./tmp/hapa-api"
+  include_ext = ["go"]
+  exclude_dir = ["tmp", "vendor"]
+  delay = 1000
+
+[log]
+  time = true
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"

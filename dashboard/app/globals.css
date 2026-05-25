@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ochre: #C47B2B;
+  --ochre-light: #E8A84A;
+  --rust: #8B3A1F;
+  --sage: #3D6B38;
+  --sand: #DDD0B3;
+  --muted: #7A6E5F;
+}
+
+@layer base {
+  * { @apply border-stone-200; }
+  body { @apply text-stone-900; }
+}
+
+@layer components {
+  .input {
+    @apply w-full bg-white border border-stone-200 text-stone-900 px-3 py-2.5 text-sm
+           focus:outline-none focus:border-[#C47B2B] placeholder:text-stone-400
+           disabled:bg-stone-50 disabled:text-stone-400 disabled:cursor-not-allowed;
+  }
+}
+
+@layer utilities {
+  .font-fraunces { font-family: var(--font-fraunces), serif; }
+  .font-mono { font-family: var(--font-mono), monospace; }
+  .text-ochre { color: var(--ochre); }
+  .bg-ochre { background-color: var(--ochre); }
+  .border-ochre { border-color: var(--ochre); }
+  .ring-ochre { --tw-ring-color: var(--ochre); }
+}
